@@ -100,6 +100,9 @@ class XGBoostJNI {
   public final static native int XGBoosterPredict(long handle, long dmat, int option_mask,
                                                   int ntree_limit, float[][] predicts);
 
+  public final static native int vivoPredictLeaf(long handle, int nnz, int[] feat_id, 
+                                                 float[] feat_val, int[] predicts);
+
   public final static native int XGBoosterLoadModel(long handle, String fname);
 
   public final static native int XGBoosterSaveModel(long handle, String fname);

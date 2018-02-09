@@ -233,6 +233,11 @@ class GBTree : public GradientBooster {
     predictor->PredictLeaf(p_fmat, out_preds, model_, ntree_limit);
   }
 
+  void vivoPredictLeaf(const int nnz, const int feat_id[], const float feat_val[],
+                      std::vector<int>& out_preds) override {
+    predictor->vivoPredictLeaf(nnz, feat_id, feat_val, model_, out_preds);
+  }
+
   void PredictContribution(DMatrix* p_fmat,
                            std::vector<bst_float>* out_contribs,
                            unsigned ntree_limit, bool approximate) override {

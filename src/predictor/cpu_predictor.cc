@@ -206,6 +206,42 @@ class CPUPredictor : public Predictor {
     }
   }
 
+  inline int vivoSearch(const int split_index, const int nnz, const int feat_id[]){
+    int idx = -1;
+    for(int i = 0; i < nnz; ++i){
+      if(feat_id[i] == split_index){
+        idx = i;
+        break;
+      }
+    }
+    return idx;
+  }
+
+  inline int vivoGetLeafIndex(const RegTree& tree, const int nnz, const int feat_id[], const float feat_val[]) const {
+    int pid = 0;
+    while (!tree[pid].is_leaf()) {
+      int split_index = (int)tree[pid].split_index();
+      int idx = vivoSearch(split_index, nnz, feat_id);
+      bool is_missing = true;
+      float fvalue = NAN;
+      if(idx != -1){
+        is_missing = false;
+        fvalue = feat_val[idx];
+      }
+
+      pid = tree.GetNext(pid, (bst_float)fvalue, is_missing);
+    }
+    return pid;
+  }
+
+  void vivoPredictLeaf(const int nnz, const int feat_id[], const float feat_val[], 
+                       const gbm::GBTreeModel& model, std::vector<int>& preds) override {
+        for (int i = 0; i < model.param.num_trees; ++i) {
+          int tid = vivoGetLeafIndex(model.trees[i], nnz, feat_id,  feat_val);
+          preds.push_back(tid);
+        }
+  }
+
   void PredictContribution(DMatrix* p_fmat, std::vector<bst_float>* out_contribs,
                            const gbm::GBTreeModel& model, unsigned ntree_limit,
                            bool approximate) override {

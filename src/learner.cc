@@ -454,6 +454,11 @@ class LearnerImpl : public Learner {
     }
   }
 
+  void vivoPredictLeaf(const int nnz, const int feat_id[], const float feat_val[], 
+                       std::vector<int>& out_preds) const override {
+      gbm_->PredictLeaf(nnz, feat_id, feat_val, out_preds);     
+  }
+
  protected:
   // check if p_train is ready to used by training.
   // if not, initialize the column access.

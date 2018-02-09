@@ -566,6 +566,31 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBoosterPredict
 
 /*
  * Class:     ml_dmlc_xgboost4j_java_XGBoostJNI
+ * Method:    vivoPredictLeaf
+ * Signature: (JJIJ)[F
+ */
+JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBoosterPredict
+  (JNIEnv *jenv, jclass jcls, jlong jhandle, jlong jdmat, jint joption_mask, jint jntree_limit, jobjectArray jout) {
+  BoosterHandle handle = (BoosterHandle) jhandle;
+  int len;
+  int *result;
+  int nnz = (int) jnnz;
+  
+  jint* feat_id = jenv->GetIntArrayElements(jfeat_id, 0);
+  jfloat* feat_val = jenv->GetFloatArrayElements(jfeat_val, 0);
+  int ret = vivoPredictLeaf(handle, nnz, feat_id, feat_val, &len, (const float *) &result);
+  jenv->ReleaseFloatArrayElements(jfeat_id, feat_id, 0);
+  jenv->ReleaseIntArrayElements(jfeat_val, feat_val, 0);
+
+  jsize jlen = (jsize) len;
+  jIntArray jarray = jenv->NewIntArray(jlen);
+  jenv->SetIntArrayRegion(jarray, 0, jlen, (jint *) result);
+  jenv->SetObjectArrayElement(jout, 0, jarray);
+  return ret;
+}
+
+/*
+ * Class:     ml_dmlc_xgboost4j_java_XGBoostJNI
  * Method:    XGBoosterLoadModel
  * Signature: (JLjava/lang/String;)V
  */

@@ -272,6 +272,22 @@ public class Booster implements Serializable, KryoSerializable {
     return this.predict(data, false, treeLimit, true, false);
   }
 
+
+  public int[] vivoPredictLeaf(int nnz, int[] feat_id, flaot feat_val[]) throws XGBoostError {
+    int[] rawPredicts = new int[1];
+    XGBoostJNI.checkCall(XGBoostJNI.vivoPredictLeaf(handle, nnz, feat_id, feat_val, rawPredicts));
+    int row = (int) data.rowNum();
+    int col = rawPredicts[0].length / row;
+    float[][] predicts = new float[row][col];
+    int r, c;
+    for (int i = 0; i < rawPredicts[0].length; i++) {
+      r = i / col;
+      c = i % col;
+      predicts[r][c] = rawPredicts[0][i];
+    }
+    return predicts;
+  }
+
   /**
    * Output feature contributions toward predictions of given data
    *
