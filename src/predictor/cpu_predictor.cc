@@ -217,7 +217,7 @@ class CPUPredictor : public Predictor {
     return idx;
   }
 
-  inline int vivoGetLeafIndex(const RegTree& tree, const int nnz, const int feat_id[], const float feat_val[]) const {
+  inline int vivoGetLeafIndex(const RegTree& tree, const int nnz, const int feat_id[], const float feat_val[]) {
     int pid = 0;
     while (!tree[pid].is_leaf()) {
       int split_index = (int)tree[pid].split_index();
@@ -235,8 +235,8 @@ class CPUPredictor : public Predictor {
   }
 
   void vivoPredictLeaf(const int nnz, const int feat_id[], const float feat_val[], 
-                       const gbm::GBTreeModel& model, std::vector<int>& preds) override {
-        for (int i = 0; i < model.param.num_trees; ++i) {
+                       const gbm::GBTreeModel& model, std::vector<int>* preds) override {
+        for (int i = 0; i < model.trees.size(); ++i) {
           int tid = vivoGetLeafIndex(model.trees[i], nnz, feat_id,  feat_val);
           preds.push_back(tid);
         }

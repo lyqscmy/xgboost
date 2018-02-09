@@ -175,7 +175,7 @@ struct ColBatch : public SparseBatch {
  *
  *  On distributed setting, usually an customized dmlc::Parser is needed instead.
  */
-class DataSource : public dmlc::DataIter<RowBatch> {
+class DataSource : public dmlc::ff<RowBatch> {
  public:
   /*!
    * \brief Meta information about the dataset

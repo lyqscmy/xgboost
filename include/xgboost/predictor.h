@@ -134,7 +134,7 @@ class Predictor {
   virtual void vivoPredictLeaf(const int nnz, const int feat_id[], 
                                const float feat_val[], 
                                const gbm::GBTreeModel& model, 
-                               std::vector<int>& preds) = 0;
+                               std::vector<int>* preds) = 0;
 
   /**
    * \fn  virtual void Predictor::PredictContribution( DMatrix* dmat,
