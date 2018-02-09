@@ -456,7 +456,7 @@ class LearnerImpl : public Learner {
 
   void vivoPredictLeaf(const int nnz, const int feat_id[], const float feat_val[], 
                        std::vector<int>& out_preds) const override {
-      gbm_->PredictLeaf(nnz, feat_id, feat_val, out_preds);     
+      gbm_->vivoPredictLeaf(nnz, feat_id, feat_val, out_preds);     
   }
 
  protected:
