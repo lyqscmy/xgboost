@@ -108,6 +108,10 @@ class GradientBooster {
                            std::vector<bst_float>* out_preds,
                            unsigned ntree_limit = 0) = 0;
 
+  virtual void vivoPredictLeaf(const int nnz, const int feat_id[], 
+                               const float feat_val[],
+                               std::vector<int>& out_preds) =0;
+
   /*!
    * \brief feature contributions to individual predictions; the output will be a vector
    *         of length (nfeats + 1) * num_output_group * nsample, arranged in that order
