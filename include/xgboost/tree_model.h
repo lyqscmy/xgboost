@@ -588,6 +588,41 @@ inline int RegTree::GetLeafIndex(const RegTree::FVec& feat, unsigned root_id) co
   return pid;
 }
 
+inline int RegTree::vivoSearch(const int split_index, const int *indices_begin, const int *indices_end)
+{
+  int offset = -1;
+  for (int i = 0; indices_begin != indices_end; ++indices_begin, ++i)
+  {
+    if ((*indices_begin) == split_index)
+    {
+      offset = i;
+      break;
+    }
+  }
+  return offset;
+}
+
+inline int RegTree::vivoGetLeafIndex(const int *indices_begin, const int *indices_end,
+                                     const int *data_begin)
+{
+  int pid = 0;
+  while (!(*this)[pid].is_leaf())
+  {
+    int split_index = static_cast<int>((*this)[pid].split_index());
+    int offset = vivoSearch(split_index, indices_begin, indices_end);
+    bool is_missing = true;
+    float fvalue = NAN;
+    if (offset != -1)
+    {
+      is_missing = false;
+      fvalue = *(data_begin + offset);
+    }
+
+    pid = this->GetNext(pid, (bst_float)fvalue, is_missing);
+  }
+  return pid;
+}
+
 inline bst_float RegTree::Predict(const RegTree::FVec& feat, unsigned root_id) const {
   int pid = this->GetLeafIndex(feat, root_id);
   return (*this)[pid].leaf_value();

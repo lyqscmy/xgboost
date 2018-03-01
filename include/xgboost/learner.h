@@ -116,9 +116,11 @@ public:
                        bool pred_contribs = false,
                        bool approx_contribs = false) const = 0;
 
-  virtual void vivoPredictLeaf(const int nnz, const int feat_id[],
-                               const float feat_val[],
-                               std::vector<int> &out_preds) const = 0;
+  virtual void vivoPredictLeaf( const int* indptr,
+                                const int* indices,
+                                const float* data,
+                                const int nindptr,
+                                std::vector<int>* out_preds) const = 0;
   /*!
    * \brief Set additional attribute to the Booster.
    *  The property will be saved along the booster.

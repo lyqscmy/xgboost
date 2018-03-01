@@ -131,10 +131,12 @@ class Predictor {
                            const gbm::GBTreeModel& model,
                            unsigned ntree_limit = 0) = 0;
 
-  virtual void vivoPredictLeaf(const int nnz, const int feat_id[], 
-                               const float feat_val[], 
-                               const gbm::GBTreeModel& model, 
-                               std::vector<int>* preds) = 0;
+  virtual void vivoPredictLeaf( const int* indptr,
+                                const int* indices,
+                                const float* data,
+                                const int nindptr,
+                                std::vector<int>* out_preds,
+                                const gbm::GBTreeModel& model) = 0;
 
   /**
    * \fn  virtual void Predictor::PredictContribution( DMatrix* dmat,

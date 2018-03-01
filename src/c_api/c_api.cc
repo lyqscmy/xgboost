@@ -767,16 +767,17 @@ XGB_DLL int XGBoosterPredict(BoosterHandle handle,
 
 
 XGB_DLL int vivoPredictLeaf( const BoosterHandle handle,
-                             const int nnz,
-                             const int feat_id[],
-                             const float feat_val[],
+                             const int* indptr,
+                             const int* indices,
+                             const float* data,
+                             const int nindptr,
                              const int *len,
                              const int *out_result) {
   std::vector<int>& preds = XGBAPIThreadLocalStore::Get()->ret_vec_int;
   API_BEGIN();
   Booster *bst = static_cast<Booster*>(handle);
   bst->LazyInit();
-  bst->learner()->vivoPredictLeaf(nnz, feat_id, feat_val, &preds);
+  bst->learner()->vivoPredictLeaf(ind_ptr, indices, data, nindptr, &preds);
   *out_result = dmlc::BeginPtr(preds);
   *len = static_cast<int>(preds.size());
   API_END();

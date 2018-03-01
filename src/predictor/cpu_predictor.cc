@@ -206,76 +206,73 @@ class CPUPredictor : public Predictor {
     }
   }
 
-  inline int vivoSearch(const int split_index, const int nnz, const int feat_id[]){
-    int idx = -1;
-    for(int i = 0; i < nnz; ++i){
-      if(feat_id[i] == split_index){
-        idx = i;
-        break;
+  void vivoPredictLeaf(const int *indptr,
+                       const int *indices,
+                       const float *data,
+                       const int nindptr,
+                       std::vector<int> *out_preds,
+                       const gbm::GBTreeModel &model) override
+  {
+    const int ntree = model.trees.size();
+    std::vector<bst_float> &preds = *out_preds;
+    preds.resize((nindptr - 1) * ntree);
+
+    // iter row
+    for (int i = 1; i < nindptr; ++i)
+    {
+      // iter colmun [begin,end)
+      int begin = indptr[i - 1];
+      int end = indptr[i];
+
+      for (int j = 0; j < ntree; ++j)
+      {
+        int tid = model.trees[j]->vivoGetLeafIndex(indices[begin], indices[end], data[begin], data[end]);
+        preds[(i - 1) * ntree + j] = tid;
       }
     }
-    return idx;
   }
+}
 
-  inline int vivoGetLeafIndex(const RegTree& tree, const int nnz, const int feat_id[], const float feat_val[]) {
-    int pid = 0;
-    while (!tree[pid].is_leaf()) {
-      int split_index = (int)tree[pid].split_index();
-      int idx = vivoSearch(split_index, nnz, feat_id);
-      bool is_missing = true;
-      float fvalue = NAN;
-      if(idx != -1){
-        is_missing = false;
-        fvalue = feat_val[idx];
-      }
-
-      pid = tree.GetNext(pid, (bst_float)fvalue, is_missing);
-    }
-    return pid;
+void
+PredictContribution(DMatrix *p_fmat, std::vector<bst_float> *out_contribs,
+                    const gbm::GBTreeModel &model, unsigned ntree_limit,
+                    bool approximate) override
+{
+  const int nthread = omp_get_max_threads();
+  InitThreadTemp(nthread, model.param.num_feature);
+  const MetaInfo &info = p_fmat->info();
+  // number of valid trees
+  ntree_limit *= model.param.num_output_group;
+  if (ntree_limit == 0 || ntree_limit > model.trees.size())
+  {
+    ntree_limit = static_cast<unsigned>(model.trees.size());
   }
-
-  void vivoPredictLeaf(const int nnz, const int feat_id[], const float feat_val[], 
-                       const gbm::GBTreeModel& model, std::vector<int>* preds) override {
-        for (int i = 0; i < model.trees.size(); ++i) {
-          int tid = vivoGetLeafIndex(model.trees[i], nnz, feat_id,  feat_val);
-          preds.push_back(tid);
-        }
+  const int ngroup = model.param.num_output_group;
+  size_t ncolumns = model.param.num_feature + 1;
+  // allocate space for (number of features + bias) times the number of rows
+  std::vector<bst_float> &contribs = *out_contribs;
+  contribs.resize(info.num_row * ncolumns * model.param.num_output_group);
+  // make sure contributions is zeroed, we could be reusing a previously
+  // allocated one
+  std::fill(contribs.begin(), contribs.end(), 0);
+  if (approximate)
+  {
+// initialize tree node mean values
+#pragma omp parallel for schedule(static)
+    for (bst_omp_uint i = 0; i < ntree_limit; ++i)
+    {
+      model.trees[i]->FillNodeMeanValues();
+    }
   }
-
-  void PredictContribution(DMatrix* p_fmat, std::vector<bst_float>* out_contribs,
-                           const gbm::GBTreeModel& model, unsigned ntree_limit,
-                           bool approximate) override {
-    const int nthread = omp_get_max_threads();
-    InitThreadTemp(nthread,  model.param.num_feature);
-    const MetaInfo& info = p_fmat->info();
-    // number of valid trees
-    ntree_limit *= model.param.num_output_group;
-    if (ntree_limit == 0 || ntree_limit > model.trees.size()) {
-      ntree_limit = static_cast<unsigned>(model.trees.size());
-    }
-    const int ngroup = model.param.num_output_group;
-    size_t ncolumns = model.param.num_feature + 1;
-    // allocate space for (number of features + bias) times the number of rows
-    std::vector<bst_float>& contribs = *out_contribs;
-    contribs.resize(info.num_row * ncolumns * model.param.num_output_group);
-    // make sure contributions is zeroed, we could be reusing a previously
-    // allocated one
-    std::fill(contribs.begin(), contribs.end(), 0);
-    if (approximate) {
-      // initialize tree node mean values
-      #pragma omp parallel for schedule(static)
-      for (bst_omp_uint i = 0; i < ntree_limit; ++i) {
-        model.trees[i]->FillNodeMeanValues();
-      }
-    }
-    // start collecting the contributions
-    dmlc::DataIter<RowBatch>* iter = p_fmat->RowIterator();
-    const std::vector<bst_float>& base_margin = info.base_margin;
-    iter->BeforeFirst();
-    while (iter->Next()) {
-      const RowBatch& batch = iter->Value();
-      // parallel over local batch
-      const bst_omp_uint nsize = static_cast<bst_omp_uint>(batch.size);
+  // start collecting the contributions
+  dmlc::DataIter<RowBatch> *iter = p_fmat->RowIterator();
+  const std::vector<bst_float> &base_margin = info.base_margin;
+  iter->BeforeFirst();
+  while (iter->Next())
+  {
+    const RowBatch &batch = iter->Value();
+    // parallel over local batch
+    const bst_omp_uint nsize = static_cast<bst_omp_uint>(batch.size);
 #pragma omp parallel for schedule(static)
       for (bst_omp_uint i = 0; i < nsize; ++i) {
         size_t row_idx = static_cast<size_t>(batch.base_rowid + i);
