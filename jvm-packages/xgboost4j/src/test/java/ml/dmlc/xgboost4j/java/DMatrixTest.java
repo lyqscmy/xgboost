@@ -66,6 +66,38 @@ public class DMatrixTest {
   }
 
   @Test
+  public void testCreateFromListOfSparseVector() throws XGBoostError {
+    //create Matrix from csr format sparse Matrix and labels
+    /**
+     * sparse matrix
+     * 1 0 2 3 0
+     * 4 0 2 3 5
+     * 3 1 2 5 0
+     */
+    DMatrix dmat1 = new DMatrix(4, 11);
+    int[] indices = new int[]{0, 2, 3};
+    float[] data = new float[]{1, 2, 3};
+    dmat1.addSparseRow(indices, data);
+
+    indices = new int[]{0, 2, 3, 4};
+    data = new float[]{4, 2, 3, 5};
+    dmat1.addSparseRow(indices, data);
+
+    indices = new int[]{0, 1, 2, 3};
+    data = new float[]{3, 1, 2, 5};
+    dmat1.addSparseRow(indices, data);
+    dmat1.complete(5);
+
+    //check row num
+    TestCase.assertTrue(dmat1.rowNum() == 3);
+    //test set label
+    float[] label1 = new float[]{1, 0, 1};
+    dmat1.setLabel(label1);
+    float[] label2 = dmat1.getLabel();
+    TestCase.assertTrue(Arrays.equals(label1, label2));
+  }
+
+  @Test
   public void testCreateFromCSR() throws XGBoostError {
     //create Matrix from csr format sparse Matrix and labels
     /**
