@@ -32,8 +32,8 @@ class SimpleDMatrix : public DMatrix {
 
   void AddSparseRow(size_t size,
                     const unsigned* indices,
-                    const bst_float* data) {
-    auto ptr = static_cast<std::unique_ptr<SimpleCSRSource>>(source_);
+                    const float* data) {
+    auto ptr = static_cast<SimpleCSRSource*>(source_.get());
     for (size_t i = 0; i < size; ++i) {
       ptr->row_data_.emplace_back(indices[i], data[i]);
     }
