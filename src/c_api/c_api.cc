@@ -242,16 +242,16 @@ XGB_DLL int XGDMatrixInit(size_t nindptr,
   mat.info.num_col = num_col;
   mat.info.num_row = nindptr - 1;
   mat.info.num_nonzero = nelem;
-  *out = new std::shared_ptr<SimpleDMatrix>(DMatrix::Create(std::move(source)));
+  *out = new std::shared_ptr<data::SimpleDMatrix>(DMatrix::Create(std::move(source)));
   API_END();
 }
 
 XGB_DLL int XGDMatrixAddSparseRow(SimpleDMatrixHandle dmat,
                                   size_t size,
                                   const unsigned* indices,
-                                  const bst_float* data) {
+                                  const float* data) {
   API_BEGIN();
-  auto ptr = static_cast<std::shared_ptr<SimpleDMatrix>*>(dmat);
+  auto ptr = static_cast<std::shared_ptr<data::SimpleDMatrix>*>(dmat);
   ptr->AddSparseRow(size, indices, data)
   API_END();
 }
