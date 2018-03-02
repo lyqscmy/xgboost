@@ -249,7 +249,7 @@ XGB_DLL int XGDMatrixInit(size_t nindptr,
 
 XGB_DLL int XGDMatrixAddSparseRow(SimpleDMatrixHandle dmat,
                                   size_t size,
-                                  const unsigned* indices,
+                                  const int* indices,
                                   const float* data) {
   API_BEGIN();
   auto ptr = static_cast<std::shared_ptr<data::SimpleDMatrix>*>(dmat)->get();
