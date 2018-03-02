@@ -242,7 +242,8 @@ XGB_DLL int XGDMatrixInit(size_t nindptr,
   mat.info.num_col = num_col;
   mat.info.num_row = nindptr - 1;
   mat.info.num_nonzero = nelem;
-  *out = new std::shared_ptr<data::SimpleDMatrix>(DMatrix::Create(std::move(source)));
+  *out = new std::shared_ptr<data::SimpleDMatrix>(
+    static_cast<data::SimpleDMatrix*>(DMatrix::Create(std::move(source))));
   API_END();
 }
 
