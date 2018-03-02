@@ -256,8 +256,8 @@ XGB_DLL int XGDMatrixComplete(SimpleCSRSourceHandle handle,
                               int num_col,
                               DMatrixHandle *out) {
   API_BEGIN();
-  auto ptr = static_cast<data::SimpleCSRSource*>(handle);
-  *out = new std::shared_ptr<DMatrix>(DMatrix::Create(std::move(new std::unique_ptr(ptr)));
+  std::unique_ptr<data::SimpleCSRSource> source(static_cast<data::SimpleCSRSource*>(handle));
+  *out = new std::shared_ptr<DMatrix>(DMatrix::Create(std::move(source)));
   API_END();
 }
 
