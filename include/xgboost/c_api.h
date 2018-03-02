@@ -106,7 +106,7 @@ XGB_DLL int XGDMatrixInit(size_t nindptr,
 XGB_DLL int XGDMatrixAddSparseRow(SimpleDMatrixHandle handle,
                                   size_t size,
                                   const unsigned* indices,
-                                  const bst_float* data);
+                                  const float* data);
 /*!
  * \brief load a data matrix
  * \param fname the name of the file
