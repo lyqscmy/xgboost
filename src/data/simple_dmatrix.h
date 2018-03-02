@@ -12,6 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include "../simple_csr_source.h"
 #include "./sparse_batch_page.h"
 
 namespace xgboost {
@@ -33,7 +34,7 @@ class SimpleDMatrix : public DMatrix {
   void AddSparseRow(size_t size,
                     const unsigned* indices,
                     const float* data) {
-    auto ptr = static_cast<SimpleCSRSource*>(source_.get());
+    auto ptr = static_cast<data::SimpleCSRSource*>(source_.get());
     for (size_t i = 0; i < size; ++i) {
       ptr->row_data_.emplace_back(indices[i], data[i]);
     }
