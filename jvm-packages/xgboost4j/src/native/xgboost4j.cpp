@@ -169,7 +169,7 @@ JNIEXPORT jstring JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBGetLastError
  */
 JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixInit
   (JNIEnv *jenv, jclass jcls, jint jnindptr, jint num_col, jint jnelem, jlongArray jout) {
-  SimpleCSRSourceHandle result;
+  DMatrixHandle result;
   int ret = XGDMatrixInit(jnindptr, jnelem, &result);
   setHandle(jenv, jout, result);
   return ret;
@@ -182,7 +182,7 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixInit
  */
 JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixAddSparseRow
   (JNIEnv *jenv, jclass jcls, jlong jhandle, jintArray jindices, jfloatArray jdata) {
-  SimpleCSRSourceHandle handle = (SimpleCSRSourceHandle) jhandle;
+  DMatrixHandle handle = (DMatrixHandle) jhandle;
   int* indices = (int *)jenv->GetPrimitiveArrayCritical(jindices, 0);
   float* data = (float *)jenv->GetPrimitiveArrayCritical(jdata, 0);
   jint size = jenv->GetArrayLength(jindices);

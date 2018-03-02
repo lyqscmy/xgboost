@@ -12,7 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
-#include "../simple_csr_source.h"
+#include "./simple_csr_source.h"
 #include "./sparse_batch_page.h"
 
 namespace xgboost {
