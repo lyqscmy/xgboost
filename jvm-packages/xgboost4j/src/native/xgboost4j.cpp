@@ -189,7 +189,7 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixAddSparse
   int* indices = (int *)jenv->GetPrimitiveArrayCritical(jindices, 0);
   float* data = (float *)jenv->GetPrimitiveArrayCritical(jdata, 0);
   jint size = jenv->GetArrayLength(jindices);
-  int ret = XGDMatrixAddSparseRow(handle, size, indices, data);
+  int ret = XGDMatrixAddSparseRow(handle, size, static_cast<(unsigned int const *)>(indices), static_cast<float const *> data);
   jenv->ReleasePrimitiveArrayCritical(jdata, data, JNI_ABORT);
   jenv->ReleasePrimitiveArrayCritical(jindices, indices, JNI_ABORT);
   return ret;
