@@ -168,9 +168,12 @@ JNIEXPORT jstring JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBGetLastError
  * Signature: (Ljava/lang/String;I[J)I
  */
 JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixInit
-  (JNIEnv *jenv, jclass jcls, jint jnindptr, jint num_col, jint jnelem, jlongArray jout) {
+  (JNIEnv *jenv, jclass jcls, jint jnindptr, jint jnum_col, jint jnelem, jlongArray jout) {
   DMatrixHandle result;
-  int ret = XGDMatrixInit(jnindptr, jnelem, &result);
+  int ret = XGDMatrixInit(static_cast<size_t>(jnindptr), 
+                          static_cast<size_t>(jnum_col),
+                          static_cast<size_t>(jnelem), 
+                          &result);
   setHandle(jenv, jout, result);
   return ret;
 }
