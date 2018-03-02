@@ -248,7 +248,7 @@ XGB_DLL int XGDMatrixInit(size_t nindptr,
 }
 
 XGB_DLL int XGDMatrixAddSparseRow(SimpleDMatrixHandle dmat,
-                                  size_t size,
+                                  const int size,
                                   const int* indices,
                                   const float* data) {
   API_BEGIN();
