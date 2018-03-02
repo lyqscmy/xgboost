@@ -104,7 +104,7 @@ XGB_DLL int XGDMatrixInit(int indptr,
 
 XGB_DLL int XGDMatrixAddSparseRow(SimpleCSRSourceHandle handle,
                                   int size,
-                                  const int *indices
+                                  const int *indices,
                                   const float *data);
 
 XGB_DLL int XGDMatrixComplete(SimpleCSRSourceHandle handle,

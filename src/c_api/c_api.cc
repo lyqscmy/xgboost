@@ -227,24 +227,24 @@ int XGDMatrixCreateFromDataIter(
   API_END();
 }
 
-XGB_DLL int XGDMatrixInit(int indptr,
+XGB_DLL int XGDMatrixInit(int nindptr,
                           int nelem,
                           SimpleCSRSourceHandle *out) {
   API_BEGIN();
-  auto ptr = new data::SimpleCSRSource()();
+  auto ptr = new data::SimpleCSRSource();
   ptr->row_ptr_.reserve(nindptr);
   ptr->row_data_.reserve(nelem);
   ptr->row_ptr_.push_back(0);
-  *out  = new std::shared_ptr<SimpleCSRSource>(ptr);
+  *out  = new std::shared_ptr<data::SimpleCSRSource>(ptr);
   API_END();
 }
 
 XGB_DLL int XGDMatrixAddSparseRow(SimpleCSRSourceHandle handle,
                                   int size,
-                                  const int *indices
+                                  const int *indices,
                                   const float *data) {
   API_BEGIN();
-  auto ptr = static_cast<SimpleCSRSource*>(handle);
+  auto ptr = static_cast<data::SimpleCSRSource*>(handle);
   for (int i = 0; i < size; ++i) {
       ptr->row_data_.emplace_back(indices[i], data[i]);
   }
@@ -256,8 +256,8 @@ XGB_DLL int XGDMatrixComplete(SimpleCSRSourceHandle handle,
                               int num_col,
                               DMatrixHandle *out) {
   API_BEGIN();
-  auto ptr = static_cast<SimpleCSRSource*>(handle);
-  *out = new std::shared_ptr<DMatrix>(DMatrix::Create(std::move(unique_ptr(ptr)));
+  auto ptr = static_cast<data::SimpleCSRSource*>(handle);
+  *out = new std::shared_ptr<DMatrix>(DMatrix::Create(std::move(new std::unique_ptr(ptr)));
   API_END();
 }
 
