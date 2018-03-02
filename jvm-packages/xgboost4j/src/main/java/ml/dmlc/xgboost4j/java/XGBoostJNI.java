@@ -51,11 +51,9 @@ class XGBoostJNI {
 
   public final static native String XGBGetLastError();
 
-  public final static native int XGDMatrixInit(int nindptr, int nelem, long[] out);
+  public final static native int XGDMatrixInit(int nindptr, int numCol, int nelem, long[] out);
 
   public final static native int XGDMatrixAddSparseRow(long handle, int[] indices, float[] data);
-
-  public final static native int XGDMatrixComplete(long handle, int num_col, long[] out);
 
   public final static native int XGDMatrixCreateFromFile(String fname, int silent, long[] out);
 

@@ -28,8 +28,8 @@
 // manually define unsigned long
 typedef uint64_t bst_ulong;  // NOLINT(*)
 
-/*! \brief handle to SimpleCSRSource */
-typedef void *SimpleCSRSourceHandle;
+/*! \brief handle to SimpleDMatrixHandle */
+typedef void *SimpleDMatrixHandle;
 /*! \brief handle to DMatrix */
 typedef void *DMatrixHandle;
 /*! \brief handle to Booster */
@@ -98,19 +98,15 @@ XGB_EXTERN_C typedef int XGBCallbackDataIterNext(
  */
 XGB_DLL const char *XGBGetLastError();
 
-XGB_DLL int XGDMatrixInit(int indptr,
-                          int nelem,
-                          SimpleCSRSourceHandle *out);
+XGB_DLL int XGDMatrixInit(size_t nindptr,
+                          size_t num_col,
+                          size_t nelem,
+                          SimpleDMatrixHandle* out);
 
-XGB_DLL int XGDMatrixAddSparseRow(SimpleCSRSourceHandle handle,
-                                  int size,
-                                  const int *indices,
-                                  const float *data);
-
-XGB_DLL int XGDMatrixComplete(SimpleCSRSourceHandle handle,
-                              int num_col,
-                              DMatrixHandle *out);
-
+XGB_DLL int XGDMatrixAddSparseRow(SimpleDMatrixHandle handle,
+                                  size_t size,
+                                  const unsigned* indices,
+                                  const bst_float* data);
 /*!
  * \brief load a data matrix
  * \param fname the name of the file

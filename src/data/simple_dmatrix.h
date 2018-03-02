@@ -30,6 +30,16 @@ class SimpleDMatrix : public DMatrix {
     return source_->info;
   }
 
+  void AddSparseRow(size_t size,
+                    const unsigned* indices,
+                    const bst_float* data) {
+    auto ptr = source_.get();
+    for (size_t i = 0; i < size; ++i) {
+      ptr->row_data_.emplace_back(indices[i], data[i]);
+    }
+    ptr->row_ptr_.push_back(ptr->row_data_.size());       
+  }
+
   dmlc::DataIter<RowBatch>* RowIterator() override {
     dmlc::DataIter<RowBatch>* iter = source_.get();
     iter->BeforeFirst();

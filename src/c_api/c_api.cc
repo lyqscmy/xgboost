@@ -227,37 +227,31 @@ int XGDMatrixCreateFromDataIter(
   API_END();
 }
 
-XGB_DLL int XGDMatrixInit(int nindptr,
-                          int nelem,
-                          SimpleCSRSourceHandle *out) {
+XGB_DLL int XGDMatrixInit(size_t nindptr,
+                          size_t num_col,
+                          size_t nelem,
+                          SimpleDMatrixHandle* out) {
   API_BEGIN();
-  auto ptr = new data::SimpleCSRSource();
-  ptr->row_ptr_.reserve(nindptr);
-  ptr->row_data_.reserve(nelem);
-  ptr->row_ptr_.push_back(0);
-  *out  = new std::shared_ptr<data::SimpleCSRSource>(ptr);
+  std::unique_ptr<data::SimpleCSRSource> source(new data::SimpleCSRSource());
+  data::SimpleCSRSource& mat = *source;
+  mat.row_ptr_.reserve(nindptr);
+  mat.row_data_.reserve(nelem);
+  mat.row_ptr_.resize(1);
+  mat.row_ptr_[0] = 0;
+  mat.info.num_col = num_col;
+  mat.info.num_row = nindptr - 1;
+  mat.info.num_nonzero = nelem;
+  *out = new std::shared_ptr<SimpleDMatrix>(DMatrix::Create(std::move(source)));
   API_END();
 }
 
-XGB_DLL int XGDMatrixAddSparseRow(SimpleCSRSourceHandle handle,
-                                  int size,
-                                  const int *indices,
-                                  const float *data) {
+XGB_DLL int XGDMatrixAddSparseRow(SimpleDMatrixHandle dmat,
+                                  size_t size,
+                                  const unsigned* indices,
+                                  const bst_float* data) {
   API_BEGIN();
-  auto ptr = static_cast<data::SimpleCSRSource*>(handle);
-  for (int i = 0; i < size; ++i) {
-      ptr->row_data_.emplace_back(indices[i], data[i]);
-  }
-  ptr->row_ptr_.push_back(ptr->row_data_.size());
-  API_END();
-}
-
-XGB_DLL int XGDMatrixComplete(SimpleCSRSourceHandle handle,
-                              int num_col,
-                              DMatrixHandle *out) {
-  API_BEGIN();
-  std::unique_ptr<data::SimpleCSRSource> source(static_cast<data::SimpleCSRSource*>(handle));
-  *out = new std::shared_ptr<DMatrix>(DMatrix::Create(std::move(source)));
+  auto ptr = static_cast<std::shared_ptr<SimpleDMatrix>*>(dmat);
+  ptr->AddSparseRow(size, indices, data)
   API_END();
 }
 

@@ -69,26 +69,17 @@ public class DMatrix {
     handle = out[0];
   }
 
-  public DMatrix(int nindptr, int nelem) throws XGBoostError {
+  public DMatrix(int nindptr, int numCol, int nelem) throws XGBoostError {
     if (nindptr < 1 || nelem < 0) {
       throw new IllegalArgumentException("nindptr should >= 2 and nelem should >= 1");
     }
     long[] out = new long[1];
-    XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixInit(nindptr, nelem, out));
+    XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixInit(nindptr, numCol, nelem, out));
     handle = out[0];
   }
 
   public void addSparseRow(int[] indices, float[] data) throws XGBoostError {
     XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixAddSparseRow(handle, indices, data));
-  }
-
-  public void complete(int num_col) throws XGBoostError {
-    if (num_col < 0) {
-      throw new IllegalArgumentException("num_col should >= 1");
-    }
-    long[] out = new long[1];
-    XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixComplete(handle, num_col, out));
-    handle = out[0];
   }
 
   /**

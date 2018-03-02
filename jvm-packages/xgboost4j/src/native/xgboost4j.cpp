@@ -168,7 +168,7 @@ JNIEXPORT jstring JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBGetLastError
  * Signature: (Ljava/lang/String;I[J)I
  */
 JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixInit
-  (JNIEnv *jenv, jclass jcls, jint jnindptr, jint jnelem, jlongArray jout) {
+  (JNIEnv *jenv, jclass jcls, jint jnindptr, jint num_col, jint jnelem, jlongArray jout) {
   SimpleCSRSourceHandle result;
   int ret = XGDMatrixInit(jnindptr, jnelem, &result);
   setHandle(jenv, jout, result);
@@ -191,21 +191,6 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixAddSparse
   jenv->ReleasePrimitiveArrayCritical(jindices, indices, JNI_ABORT);
   return ret;
 }
-
-/*
- * Class:     ml_dmlc_xgboost4j_java_XGBoostJNI
- * Method:    XGDMatrixComplete
- * Signature: (Ljava/lang/String;I[J)I
- */
-JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixComplete
-  (JNIEnv *jenv, jclass jcls, jlong jhandle, jint jnum_col, jlongArray jout) {
-    DMatrixHandle result;
-    SimpleCSRSourceHandle handle = (SimpleCSRSourceHandle) jhandle;
-    int ret = XGDMatrixComplete(handle, jnum_col, &result);
-    setHandle(jenv, jout, result);
-    return ret;
-}
-
 
 /*
  * Class:     ml_dmlc_xgboost4j_java_XGBoostJNI

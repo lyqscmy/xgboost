@@ -74,7 +74,7 @@ public class DMatrixTest {
      * 4 0 2 3 5
      * 3 1 2 5 0
      */
-    DMatrix dmat1 = new DMatrix(4, 11);
+    DMatrix dmat1 = new DMatrix(4, 5, 11);
     int[] indices = new int[]{0, 2, 3};
     float[] data = new float[]{1, 2, 3};
     dmat1.addSparseRow(indices, data);
@@ -86,7 +86,6 @@ public class DMatrixTest {
     indices = new int[]{0, 1, 2, 3};
     data = new float[]{3, 1, 2, 5};
     dmat1.addSparseRow(indices, data);
-    dmat1.complete(5);
 
     //check row num
     TestCase.assertTrue(dmat1.rowNum() == 3);
