@@ -208,17 +208,17 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixCreateFro
 JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGDMatrixCreateFromCSREx
   (JNIEnv *jenv, jclass jcls, jlongArray jindptr, jintArray jindices, jfloatArray jdata, jint jcol, jlongArray jout) {
   DMatrixHandle result;
-  jlong* indptr = jenv->GetLongArrayElements(jindptr, 0);
-  jint* indices = jenv->GetIntArrayElements(jindices, 0);
-  jfloat* data = jenv->GetFloatArrayElements(jdata, 0);
+  jlong* indptr = static_cast<jlong*>(jenv->GetPrimitiveArrayCritical(jindptr, 0));
+  jint* indices = static_cast<jint*>(jenv->GetPrimitiveArrayCritical(jindices, 0));
+  jfloat* data = static_cast<jfloat*>(jenv->GetPrimitiveArrayCritical(jdata, 0));
   bst_ulong nindptr = (bst_ulong)jenv->GetArrayLength(jindptr);
   bst_ulong nelem = (bst_ulong)jenv->GetArrayLength(jdata);
   jint ret = (jint) XGDMatrixCreateFromCSREx((size_t const *)indptr, (unsigned int const *)indices, (float const *)data, nindptr, nelem, jcol, &result);
   setHandle(jenv, jout, result);
   //Release
-  jenv->ReleaseLongArrayElements(jindptr, indptr, 0);
-  jenv->ReleaseIntArrayElements(jindices, indices, 0);
-  jenv->ReleaseFloatArrayElements(jdata, data, 0);
+  jenv->ReleasePrimitiveArrayCritical(jindptr, indptr, JNI_ABORT);
+  jenv->ReleasePrimitiveArrayCritical(jindices, indices, JNI_ABORT);
+  jenv->ReleasePrimitiveArrayCritical(jdata, data, JNI_ABORT);
   return ret;
 }
 
