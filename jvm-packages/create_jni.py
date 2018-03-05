@@ -85,6 +85,7 @@ if __name__ == "__main__":
                 maybe_generator = ""
 
             args = ["-D{0}:BOOL={1}".format(k, v) for k, v in CONFIG.items()]
+            args[0] = "-DUSE_OPENMP=OFF"
             run("cmake .. " + " ".join(args) + maybe_generator)
             run("cmake --build . --config Release")
 
