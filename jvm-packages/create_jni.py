@@ -14,8 +14,8 @@ if sys.platform.startswith("linux"):
 
 
 CONFIG = {
-    "CMAKE_VERBOSE_MAKEFILE": "ON",
-    "USE_OPENMP": "ON",
+    "CMAKE_VERBOSE_MAKEFILE": "OFF",
+    "USE_OPENMP": "OFF",
     "USE_HDFS": "OFF",
     "USE_AZURE": "OFF",
     "USE_S3": "OFF",
@@ -82,8 +82,7 @@ if __name__ == "__main__":
                 # Force x64 build on Windows.
                 maybe_generator = ' -G"Visual Studio 14 Win64"'
             else:
-                maybe_generator = ""
-            CONFIG["USE_OPENMP"] = "OFF"
+                maybe_generator = " -G Ninja"
             args = ["-D{0}:BOOL={1}".format(k, v) for k, v in CONFIG.items()]
             run("cmake .. " + " ".join(args) + maybe_generator)
             run("cmake --build . --config Release")
