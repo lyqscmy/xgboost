@@ -14,11 +14,11 @@ if sys.platform.startswith("linux"):
 
 
 CONFIG = {
+    "CMAKE_VERBOSE_MAKEFILE": "ON",
     "USE_OPENMP": "ON",
     "USE_HDFS": "OFF",
     "USE_AZURE": "OFF",
     "USE_S3": "OFF",
-
     "PLUGIN_UPDATER_GPU": "OFF",
     "JVM_BINDINGS": "ON"
 }
@@ -83,9 +83,8 @@ if __name__ == "__main__":
                 maybe_generator = ' -G"Visual Studio 14 Win64"'
             else:
                 maybe_generator = ""
-
+            CONFIG["USE_OPENMP"] = "OFF"
             args = ["-D{0}:BOOL={1}".format(k, v) for k, v in CONFIG.items()]
-            args[0] = "-DUSE_OPENMP=OFF"
             run("cmake .. " + " ".join(args) + maybe_generator)
             run("cmake --build . --config Release")
 
