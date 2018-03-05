@@ -51,6 +51,7 @@ if(USE_AVX)
   add_definitions(-DXGBOOST_USE_AVX)
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 
 # compiled code customizations for R package
 if(R_LIB)

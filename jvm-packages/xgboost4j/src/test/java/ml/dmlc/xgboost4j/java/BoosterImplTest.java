@@ -18,10 +18,8 @@ package ml.dmlc.xgboost4j.java;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.nio.file.Paths;
+import java.util.*;
 
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -85,6 +83,45 @@ public class BoosterImplTest {
   }
 
   @Test
+  public void testPredictInst() throws XGBoostError, IOException {
+
+    DMatrix trainMat = new DMatrix("../../demo/data/agaricus.txt.train");
+    DMatrix testMat = new DMatrix("../../demo/data/agaricus.txt.test");
+
+    Booster booster = trainBooster(trainMat, testMat);
+
+    Scanner in = new Scanner(Paths.get("../../demo/data/agaricus.txt.test"), "UTF-8");
+
+    List<float[]> preidcts = new ArrayList<>(1611);
+    while (in.hasNextLine()) {
+      String[] fileds = in.nextLine().split(" ");
+      System.out.println(fileds);
+      int[] indices = new int[fileds.length - 1];
+      float[] data = new float[fileds.length - 1];
+      for (int i = 1; i < fileds.length; i++) {
+        String[] pair = fileds[i].split(":");
+        indices[i - 1] = Integer.parseInt(pair[0]);
+        data[i - 1] = Float.parseFloat(pair[1]);
+      }
+      System.out.println(indices);
+      System.out.println(data);
+      float[] result = booster.predictInst(indices, data, false, 0);
+      System.out.println(result);
+      preidcts.add(result);
+    }
+
+    float[][] predicts2 = new float[preidcts.size()][];
+    for (int i = 0; i < preidcts.size(); i++) {
+      predicts2[i] = preidcts.get(i);
+    }
+
+    //eval
+    IEvaluation eval = new EvalError();
+    //error must be less than 0.1
+    TestCase.assertTrue(eval.eval(predicts2, testMat) < 0.1f);
+  }
+
+  @Test
   public void testBoosterBasic() throws XGBoostError, IOException {
 
     DMatrix trainMat = new DMatrix("../../demo/data/agaricus.txt.train");
@@ -94,7 +131,7 @@ public class BoosterImplTest {
 
     //predict raw output
     float[][] predicts = booster.predict(testMat, true, 0);
-
+    System.out.println(predicts);
     //eval
     IEvaluation eval = new EvalError();
     //error must be less than 0.1
@@ -183,7 +220,7 @@ public class BoosterImplTest {
   }
 
   private void testWithFastHisto(DMatrix trainingSet, Map<String, DMatrix> watches, int round,
-                                      Map<String, Object> paramMap, float threshold) throws XGBoostError {
+                                 Map<String, Object> paramMap, float threshold) throws XGBoostError {
     float[][] metrics = new float[watches.size()][round];
     Booster booster = XGBoost.train(trainingSet, paramMap, round, watches,
             metrics, null, null, 0);
@@ -193,7 +230,7 @@ public class BoosterImplTest {
       }
     for (int i = 0; i < metrics.length; i++)
       for (int j = 0; j < metrics[i].length; j++) {
-      TestCase.assertTrue(metrics[i][j] >= threshold);
+        TestCase.assertTrue(metrics[i][j] >= threshold);
       }
     booster.dispose();
   }
