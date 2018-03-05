@@ -744,6 +744,30 @@ XGB_DLL int XGBoosterEvalOneIter(BoosterHandle handle,
   API_END();
 }
 
+XGB_DLL int XGBoosterPredictInst(BoosterHandle handle,
+                                 const int len,
+                                 const int* indices,
+                                 const float* data,
+                                 const bool output_margin,
+                                 const int ntree_limit,
+                                 int* out_len,
+                                 float **out_result) {
+  std::vector<SparseBatch::Entry> entrys(len);
+  for(int i=0; i<len; i++) {
+    entrys.emplace_back(indices[i], data[i]);
+  }
+  const SparseBatch::Inst inst(entrys.data(), len);
+  HostDeviceVector<bst_float>& preds =
+    XGBAPIThreadLocalStore::Get()->ret_vec_float;
+  API_BEGIN();
+  Booster *bst = static_cast<Booster*>(handle);
+  bst->LazyInit();
+  bst->learner()->Predict(inst, output_margin, &preds, ntree_limit);
+  *out_result = dmlc::BeginPtr(preds.data_h());
+  *out_len = static_cast<int>(preds.size());
+  API_END();
+}
+
 XGB_DLL int XGBoosterPredict(BoosterHandle handle,
                              DMatrixHandle dmat,
                              int option_mask,

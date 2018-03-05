@@ -28,7 +28,7 @@ ADD_LDFLAGS =
 ADD_CFLAGS = -march=native
 
 # Whether enable openmp support, needed for multi-threading.
-USE_OPENMP = 0
+USE_OPENMP = 1
 
 # whether use HDFS support during compile
 USE_HDFS = 0

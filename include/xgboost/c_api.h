@@ -392,6 +392,16 @@ XGB_DLL int XGBoosterEvalOneIter(BoosterHandle handle,
                                  const char *evnames[],
                                  bst_ulong len,
                                  const char **out_result);
+
+XGB_DLL int XGBoosterPredictInst(BoosterHandle handle,
+                                 const int len,
+                                 const int* indices,
+                                 const float* data,
+                                 const bool output_margin,
+                                 const int ntree_limit,
+                                 int* out_len,
+                                 float **out_result);
+
 /*!
  * \brief make prediction based on dmat
  * \param handle handle

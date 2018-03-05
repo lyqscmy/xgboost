@@ -220,6 +220,15 @@ public class Booster implements Serializable, KryoSerializable {
     return evalInfo;
   }
 
+  public float[] predictInst(int[] indices, float[] data,
+                             boolean outputMargin, int treeLimit) throws XGBoostError {
+    float[][] rawPredicts = new float[1][];
+    XGBoostJNI.checkCall(XGBoostJNI.XGBoosterPredictInst(handle, indices, data, outputMargin,
+            treeLimit, rawPredicts));
+    float[] predicts = rawPredicts[0];
+    return predicts;
+  }
+
   /**
    * Advanced predict function with all the options.
    *
