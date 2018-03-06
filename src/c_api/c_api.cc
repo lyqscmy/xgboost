@@ -753,6 +753,7 @@ XGB_DLL int XGBoosterPredictInst(BoosterHandle handle,
                                  int* out_len,
                                  float **out_result) {
   std::vector<SparseBatch::Entry> entrys(len);
+  entrys.resize(0);
   for(int i=0; i<len; i++) {
     entrys.emplace_back(indices[i], data[i]);
   }

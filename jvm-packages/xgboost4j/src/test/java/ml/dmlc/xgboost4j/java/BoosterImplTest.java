@@ -90,12 +90,12 @@ public class BoosterImplTest {
 
     Booster booster = trainBooster(trainMat, testMat);
 
+    // Scanner in = new Scanner(Paths.get("../../demo/data/agaricus.txt.onerow"), "UTF-8");
     Scanner in = new Scanner(Paths.get("../../demo/data/agaricus.txt.test"), "UTF-8");
 
-    List<float[]> preidcts = new ArrayList<>(1611);
+    List<float[]> preidcts = new ArrayList<>();
     while (in.hasNextLine()) {
       String[] fileds = in.nextLine().split(" ");
-      System.out.println(fileds);
       int[] indices = new int[fileds.length - 1];
       float[] data = new float[fileds.length - 1];
       for (int i = 1; i < fileds.length; i++) {
@@ -103,22 +103,18 @@ public class BoosterImplTest {
         indices[i - 1] = Integer.parseInt(pair[0]);
         data[i - 1] = Float.parseFloat(pair[1]);
       }
-      System.out.println(indices);
-      System.out.println(data);
-      float[] result = booster.predictInst(indices, data, false, 0);
-      System.out.println(result);
+      float[] result = booster.predictInst(indices, data, true, 0);
       preidcts.add(result);
     }
 
-    float[][] predicts2 = new float[preidcts.size()][];
-    for (int i = 0; i < preidcts.size(); i++) {
-      predicts2[i] = preidcts.get(i);
-    }
+    float[][] ys = preidcts.toArray(new float[0][]);
 
+    System.out.println("actually:"+Arrays.toString(ys[0]));
+    System.out.println("actually:"+Arrays.toString(ys[1]));
     //eval
     IEvaluation eval = new EvalError();
     //error must be less than 0.1
-    TestCase.assertTrue(eval.eval(predicts2, testMat) < 0.1f);
+    TestCase.assertTrue(eval.eval(ys, testMat) < 0.1f);
   }
 
   @Test
@@ -127,11 +123,13 @@ public class BoosterImplTest {
     DMatrix trainMat = new DMatrix("../../demo/data/agaricus.txt.train");
     DMatrix testMat = new DMatrix("../../demo/data/agaricus.txt.test");
 
+    DMatrix onerowMat = new DMatrix("../../demo/data/agaricus.txt.onerow");
     Booster booster = trainBooster(trainMat, testMat);
 
     //predict raw output
     float[][] predicts = booster.predict(testMat, true, 0);
-    System.out.println(predicts);
+    System.out.println("should:"+Arrays.toString(predicts[0]));
+    System.out.println("should:"+Arrays.toString(predicts[1]));
     //eval
     IEvaluation eval = new EvalError();
     //error must be less than 0.1
