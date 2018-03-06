@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import junit.framework.TestCase;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -89,11 +90,13 @@ public class BoosterImplTest {
     DMatrix testMat = new DMatrix("../../demo/data/agaricus.txt.test");
 
     Booster booster = trainBooster(trainMat, testMat);
+    //predict raw output
+    float[][] predicts1 = booster.predict(testMat, true, 0);
 
     // Scanner in = new Scanner(Paths.get("../../demo/data/agaricus.txt.onerow"), "UTF-8");
     Scanner in = new Scanner(Paths.get("../../demo/data/agaricus.txt.test"), "UTF-8");
 
-    List<float[]> preidcts = new ArrayList<>();
+    List<float[]> preidcts2 = new ArrayList<>(1611);
     while (in.hasNextLine()) {
       String[] fileds = in.nextLine().split(" ");
       int[] indices = new int[fileds.length - 1];
@@ -104,17 +107,15 @@ public class BoosterImplTest {
         data[i - 1] = Float.parseFloat(pair[1]);
       }
       float[] result = booster.predictInst(indices, data, true, 0);
-      preidcts.add(result);
+      preidcts2.add(result);
     }
 
-    float[][] ys = preidcts.toArray(new float[0][]);
+    for (int i = 0; i < predicts1.length; i++) {
+      for (int j = 0; j < predicts1[i].length; j++) {
+        Assert.assertEquals(predicts1[i][j], preidcts2.get(i)[j], 0.00001);
+      }
 
-    System.out.println("actually:"+Arrays.toString(ys[0]));
-    System.out.println("actually:"+Arrays.toString(ys[1]));
-    //eval
-    IEvaluation eval = new EvalError();
-    //error must be less than 0.1
-    TestCase.assertTrue(eval.eval(ys, testMat) < 0.1f);
+    }
   }
 
   @Test
@@ -128,8 +129,8 @@ public class BoosterImplTest {
 
     //predict raw output
     float[][] predicts = booster.predict(testMat, true, 0);
-    System.out.println("should:"+Arrays.toString(predicts[0]));
-    System.out.println("should:"+Arrays.toString(predicts[1]));
+    System.out.println("should:" + Arrays.toString(predicts[0]));
+    System.out.println("should:" + Arrays.toString(predicts[1]));
     //eval
     IEvaluation eval = new EvalError();
     //error must be less than 0.1
