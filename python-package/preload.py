@@ -13,3 +13,5 @@ with open('demo/data/test.txt') as f:
     xs = [tuple(i.split(':')) for i in data[1:]]
     indices = [int(index) for index,_ in  xs]
     values = [float(value) for _, value in  xs]
+
+bst.predictInst(indices, values)
