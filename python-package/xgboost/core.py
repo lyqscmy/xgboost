@@ -991,7 +991,7 @@ class Booster(object):
     def predictInst(self, indices, values, output_margin=False, ntree_limit=0):
         length = ctypes.c_int()
         preds = ctypes.POINTER(ctypes.c_float)()
-        _check_call(_LIB.XGBoosterPredict(self.handle, 
+        _check_call(_LIB.XGBoosterPredictInst(self.handle, 
                                           ctypes.c_int(len(indices)),
                                           ctypes.byref((ctypes.c_int * len(indices))(*indices)),
                                           ctypes.byref((ctypes.c_float * len(values))(*values)),

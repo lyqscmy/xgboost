@@ -553,7 +553,7 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBoosterPredictIn
   (JNIEnv *jenv, jclass jcls, jlong jhandle, jintArray jindices, jfloatArray jdata, jboolean joutput_margin, jint jntree_limit, jobjectArray jout) {
     BoosterHandle handle = reinterpret_cast<BoosterHandle>(jhandle);
     int* indices = static_cast<int*>(jenv->GetPrimitiveArrayCritical(jindices, 0));
-    float* data = static_cast<float*>(jenv->GetPrimitiveArrayCritical(jindices, 0));
+    float* data = static_cast<float*>(jenv->GetPrimitiveArrayCritical(jdata, 0));
     const int len = static_cast<const int>(jenv->GetArrayLength(jindices));
     const bool output_margin = static_cast<const bool>(joutput_margin);
     const int ntree_limit = static_cast<const int>(jntree_limit);
