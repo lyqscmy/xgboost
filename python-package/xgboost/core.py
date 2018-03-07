@@ -1002,6 +1002,26 @@ class Booster(object):
         preds = ctypes2numpy(preds, length.value, np.float32)
         return preds
 
+    def predictLeafInst(self, indices, values, output_margin=False, ntree_limit=0):
+        length = ctypes.c_int()
+        preds = ctypes.POINTER(ctypes.c_float)()
+        _check_call(_LIB.XGBoosterPredictLeafInst(self.handle, 
+                                          ctypes.c_int(len(indices)),
+                                          ctypes.byref((ctypes.c_int * len(indices))(*indices)),
+                                          ctypes.byref((ctypes.c_float * len(values))(*values)),
+                                          ctypes.c_bool(output_margin),
+                                          ctypes.c_int(ntree_limit),
+                                          ctypes.byref(length),
+                                          ctypes.byref(preds)))
+        preds = ctypes2numpy(preds, length.value, np.float32)
+        # preds = preds.astype(np.int32)
+        # nrow = 1
+        # if preds.size != nrow and preds.size % nrow == 0:
+        #     chunk_size = int(preds.size / nrow)
+        #     preds = preds.reshape(nrow, chunk_size)
+        return preds
+
+
 
     def predict(self, data, output_margin=False, ntree_limit=0, pred_leaf=False,
                 pred_contribs=False, approx_contribs=False, pred_interactions=False):

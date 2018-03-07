@@ -82,6 +82,7 @@ class GradientBooster {
   virtual void PredictBatch(DMatrix* dmat,
                             HostDeviceVector<bst_float>* out_preds,
                             unsigned ntree_limit = 0) = 0;
+
   /*!
    * \brief online prediction function, predict score for one instance at a time
    *  NOTE: use the batch prediction interface if possible, batch prediction is usually
@@ -95,6 +96,11 @@ class GradientBooster {
    * \sa Predict
    */
   virtual void PredictInstance(const SparseBatch::Inst& inst,
+                       std::vector<bst_float>* out_preds,
+                       unsigned ntree_limit = 0,
+                       unsigned root_index = 0) = 0;
+
+  virtual void PredictLeafInstance(const SparseBatch::Inst& inst,
                        std::vector<bst_float>* out_preds,
                        unsigned ntree_limit = 0,
                        unsigned root_index = 0) = 0;

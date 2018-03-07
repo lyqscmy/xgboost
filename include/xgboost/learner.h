@@ -95,6 +95,7 @@ class Learner : public rabit::Serializable {
   virtual std::string EvalOneIter(int iter,
                                   const std::vector<DMatrix*>& data_sets,
                                   const std::vector<std::string>& data_names) = 0;
+
   /*!
    * \brief get prediction given the model.
    * \param data input data
@@ -156,6 +157,11 @@ class Learner : public rabit::Serializable {
   std::vector<std::string> DumpModel(const FeatureMap& fmap,
                                      bool with_stats,
                                      std::string format) const;
+ inline void PredictLeafInstance(const SparseBatch::Inst &inst,
+		      bool output_margin,
+		      HostDeviceVector<bst_float> *out_preds,
+		      unsigned ntree_limit = 0,
+		      unsigned root_index = 0) const;
   /*!
    * \brief online prediction function, predict score for one instance at a time
    *  NOTE: use the batch prediction interface if possible, batch prediction is usually
@@ -171,6 +177,7 @@ class Learner : public rabit::Serializable {
                       bool output_margin,
                       HostDeviceVector<bst_float> *out_preds,
                       unsigned ntree_limit = 0) const;
+
   /*!
    * \brief Create a new instance of learner.
    * \param cache_data The matrix to cache the prediction.
@@ -188,6 +195,25 @@ class Learner : public rabit::Serializable {
   /*! \brief The evaluation metrics used to evaluate the model. */
   std::vector<std::unique_ptr<Metric> > metrics_;
 };
+
+inline void Learner::PredictLeafInstance(const SparseBatch::Inst &inst,
+		      bool output_margin,
+		      HostDeviceVector<bst_float> *out_preds,
+		      unsigned ntree_limit,
+		      unsigned root_index) const {
+  gbm_->PredictLeafInstance(inst, &out_preds->data_h(), ntree_limit, root_index);
+  //TODO how to do output_margin?
+  /* if (!output_margin) { */
+  /*   obj_->PredTransform(out_preds); */
+  /* } */
+    /* std::vector<bst_float>& preds = out_preds->data_h(); */
+    /* printf("size:%d",preds.size()); */
+    /* printf("capacity:%d\n",preds.capacity()); */
+    
+    /* for(bst_uint i = 0;i < 150;i++){ */
+    /*     printf("%f,",preds[i]); */
+    /* } */
+}
 
 // implementation of inline functions.
 inline void Learner::Predict(const SparseBatch::Inst& inst,

@@ -129,6 +129,12 @@ class GBLinear : public GradientBooster {
     }
   }
 
+  void PredictLeafInstance(const SparseBatch::Inst& inst,
+               std::vector<bst_float>* out_preds,
+               unsigned ntree_limit,
+               unsigned root_index) override {
+  }
+
   void PredictLeaf(DMatrix *p_fmat,
                    std::vector<bst_float> *out_preds,
                    unsigned ntree_limit) override {

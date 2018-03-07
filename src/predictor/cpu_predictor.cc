@@ -14,6 +14,42 @@ DMLC_REGISTRY_FILE_TAG(cpu_predictor);
 
 class CPUPredictor : public Predictor {
  protected:
+
+  void PredictLeafInstance(const SparseBatch::Inst& inst,
+                       std::vector<bst_float>* out_preds,
+                       const gbm::GBTreeModel& model, unsigned ntree_limit,
+                       unsigned root_index) override {
+    /* for(bst_uint i = 0;i < inst.length;i++){ */
+    /*     printf("%d:%f,",inst[i].index,inst[i].fvalue); */
+    /* } */
+    /* printf("\n"); */
+    InitThreadTemp(1, model.param.num_feature);
+    ntree_limit *= model.param.num_output_group;
+    if (ntree_limit == 0 || ntree_limit > model.trees.size()) {
+      ntree_limit = static_cast<unsigned>(model.trees.size());
+    }
+    std::vector<bst_float>& preds = *out_preds;
+    preds.resize(ntree_limit);
+    /* printf("size:%d",preds.size()); */
+    /* printf("capacity:%d\n",preds.capacity()); */
+    RegTree::FVec& feats = thread_temp[0];
+    feats.Fill(inst);
+  for (unsigned j = 0; j < ntree_limit; ++j) {
+	  int tid = model.trees[j]->GetLeafIndex(feats, root_index);
+	  /* printf("%d,",tid); */
+	  preds[j] = (static_cast<bst_float>(tid));
+  }
+  /* printf("\n"); */
+  /* printf("\n"); */
+    /* printf("size:%d",preds.size()); */
+    /* printf("capacity:%d\n",preds.capacity()); */
+    
+    /* for(bst_uint i = 0;i < ntree_limit;i++){ */
+    /*     printf("%f,",preds[i]); */
+    /* } */
+    feats.Drop(inst);
+  }
+
   static bst_float PredValue(const RowBatch::Inst& inst,
                              const std::vector<std::unique_ptr<RegTree>>& trees,
                              const std::vector<int>& tree_info, int bst_group,

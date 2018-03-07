@@ -87,6 +87,11 @@ class Predictor {
       std::vector<std::unique_ptr<TreeUpdater>>* updaters,
       int num_new_trees) = 0;
 
+  virtual void PredictLeafInstance(const SparseBatch::Inst& inst,
+                               std::vector<bst_float>* out_preds,
+                               const gbm::GBTreeModel& model,
+                               unsigned ntree_limit = 0,
+                               unsigned root_index = 0) = 0;
   /**
    * \fn  virtual void Predictor::PredictInstance( const SparseBatch::Inst&
    * inst, std::vector<bst_float>* out_preds, const gbm::GBTreeModel& model,
