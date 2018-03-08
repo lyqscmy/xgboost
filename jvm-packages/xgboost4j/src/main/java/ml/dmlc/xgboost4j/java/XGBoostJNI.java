@@ -97,6 +97,8 @@ class XGBoostJNI {
   public final static native int XGBoosterEvalOneIter(long handle, int iter, long[] dmats,
                                                       String[] evnames, String[] eval_info);
 
+  public final static native int XGBoosterPredictLeafInst(long handle, int[] indices, float[] data, 
+                                                      boolean output_margin, int ntree_limit, float[][] predicts);
   public final static native int XGBoosterPredictInst(long handle, int[] indices, float[] data, 
                                                       boolean output_margin, int ntree_limit, float[][] predicts);
 

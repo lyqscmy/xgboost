@@ -546,6 +546,31 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBoosterEvalOneIt
 
 /*
  * Class:     ml_dmlc_xgboost4j_java_XGBoostJNI
+ * Method:    XGBoosterPredictLeafInst
+ * Signature: (JJII[[F)I
+ */
+JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBoosterPredictLeafInst
+  (JNIEnv *jenv, jclass jcls, jlong jhandle, jintArray jindices, jfloatArray jdata, jboolean joutput_margin, jint jntree_limit, jobjectArray jout) {
+    BoosterHandle handle = reinterpret_cast<BoosterHandle>(jhandle);
+    int* indices = static_cast<int*>(jenv->GetPrimitiveArrayCritical(jindices, 0));
+    float* data = static_cast<float*>(jenv->GetPrimitiveArrayCritical(jdata, 0));
+    const int len = static_cast<const int>(jenv->GetArrayLength(jindices));
+    const bool output_margin = static_cast<const bool>(joutput_margin);
+    const int ntree_limit = static_cast<const int>(jntree_limit);
+    int out_len;
+    float *result;
+    int ret = XGBoosterPredictLeafInst(handle, len, indices, data, output_margin, ntree_limit, &out_len, static_cast<float **>(&result));
+
+    jenv->ReleasePrimitiveArrayCritical(jdata, data, JNI_ABORT);
+    jenv->ReleasePrimitiveArrayCritical(jindices, indices, JNI_ABORT);
+    jsize jlen = static_cast<jsize>(out_len);
+    jfloatArray jarray = jenv->NewFloatArray(jlen);
+    jenv->SetFloatArrayRegion(jarray, 0, jlen, static_cast<jfloat *>(result));
+    jenv->SetObjectArrayElement(jout, 0, jarray);
+    return static_cast<jint>(ret);
+  }
+/*
+ * Class:     ml_dmlc_xgboost4j_java_XGBoostJNI
  * Method:    XGBoosterPredictInst
  * Signature: (JJII[[F)I
  */
