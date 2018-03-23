@@ -402,13 +402,13 @@ XGB_DLL int XGBoosterPredictInst(BoosterHandle handle,
                                  int* out_len,
                                  float **out_result);
 
-XGB_DLL int XGBoosterPredictLeafInst(BoosterHandle handle,
+XGB_DLL int XGBoosterPredictLeafInst(const BoosterHandle handle,
                                  const int len,
                                  const int* indices,
                                  const float* data,
                                  const bool output_margin,
-                                 const int ntree_limit,
-                                 int* out_len,
+                                 const unsigned ntree_limit,
+                                 bst_ulong *out_len,
                                  float **out_result);
 /*!
  * \brief make prediction based on dmat

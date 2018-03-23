@@ -769,14 +769,14 @@ XGB_DLL int XGBoosterPredictInst(BoosterHandle handle,
   API_END();
 }
 
-XGB_DLL int XGBoosterPredictLeafInst(BoosterHandle handle,
+XGB_DLL int XGBoosterPredictLeafInst(const BoosterHandle handle,
                                  const int len,
                                  const int* indices,
                                  const float* data,
                                  const bool output_margin,
-                                 const int ntree_limit,
-                                 int* out_len,
-                                 float **out_result) {
+                                 const unsigned ntree_limit,
+                                 xgboost::bst_ulong *out_len,
+                                 bst_float **out_result) {
   std::vector<SparseBatch::Entry> entrys(len);
   entrys.resize(0);
   for(int i=0; i<len; i++) {
@@ -788,7 +788,7 @@ XGB_DLL int XGBoosterPredictLeafInst(BoosterHandle handle,
   API_BEGIN();
   Booster *bst = static_cast<Booster*>(handle);
   bst->LazyInit();
-  bst->learner()->PredictLeafInstance(inst, output_margin, &preds, ntree_limit, 0);
+  bst->learner()->PredictLeafInstance(inst, output_margin, &preds, ntree_limit, 0u);
     /* printf("size:%d",preds.size()); */
     /* printf("capacity:%d\n",preds.capacity()); */
     
@@ -796,7 +796,7 @@ XGB_DLL int XGBoosterPredictLeafInst(BoosterHandle handle,
     /*     printf("%f,",preds[i]); */
     /* } */
   *out_result = dmlc::BeginPtr(preds.data_h());
-  *out_len = static_cast<int>(preds.size());
+  *out_len = static_cast<xgboost::bst_ulong>(preds.size());
 
   /* for(int i=0;i<*out_len;i++) { */
 	  /* printf("%f,",preds.data_h()[i]); */
