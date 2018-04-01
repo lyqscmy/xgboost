@@ -8,6 +8,7 @@
 #ifndef XGBOOST_GBM_H_
 #define XGBOOST_GBM_H_
 
+#include <xgboost/tree_model.h>
 #include <dmlc/registry.h>
 #include <vector>
 #include <utility>
@@ -100,10 +101,8 @@ class GradientBooster {
                        unsigned ntree_limit = 0,
                        unsigned root_index = 0) = 0;
 
-  virtual void PredictLeafInstance(const SparseBatch::Inst& inst,
-                       std::vector<bst_float>* out_preds,
-                       unsigned ntree_limit = 0,
-                       unsigned root_index = 0) = 0;
+  virtual std::vector<int> PredictLeafInstance(const RegTree::FVec& feat) = 0;
+
   /*!
    * \brief predict the leaf index of each tree, the output will be nsample * ntree vector
    *        this is only valid in gbtree predictor

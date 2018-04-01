@@ -12,7 +12,7 @@ with open("labels.npy",'rb') as f:
     ans = np.load(f)
 
 
-result = True
+result = False
 with open('ads-test.txt') as f:
     count = 0
     for line in f:
@@ -21,8 +21,9 @@ with open('ads-test.txt') as f:
         xs = [tuple(i.split(':')) for i in data[1:]]
         indices = [int(index) for index,_ in  xs]
         values = [float(value) for _, value in  xs]
-        labels = bst.predictLeafInst(indices, values)
-        result &= (np.all(predicts[count]==labels))
+        for i in range(1000000):
+            labels = bst.predictLeafInst(indices, values)
+            result &= (np.all(predicts[count]==labels))
         count+=1
 
 print(result)

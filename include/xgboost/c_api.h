@@ -408,8 +408,9 @@ XGB_DLL int XGBoosterPredictLeafInst(const BoosterHandle handle,
                                  const float* data,
                                  const bool output_margin,
                                  const unsigned ntree_limit,
-                                 bst_ulong *out_len,
+                                 int *out_len,
                                  float **out_result);
+
 /*!
  * \brief make prediction based on dmat
  * \param handle handle

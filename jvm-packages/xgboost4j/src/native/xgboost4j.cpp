@@ -20,6 +20,7 @@
 #include <cstring>
 #include <vector>
 #include <string>
+#include <chrono>  // for high_resolution_clock
 
 // helper functions
 // set handle
@@ -551,39 +552,45 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBoosterEvalOneIt
  */
 JNIEXPORT jint JNICALL Java_ml_dmlc_xgboost4j_java_XGBoostJNI_XGBoosterPredictLeafInst
   (JNIEnv *jenv, jclass jcls, jlong jhandle, jintArray jindices, jfloatArray jdata, jboolean joutput_margin, jint jntree_limit, jobjectArray jout) {
+// Record start time
+/* auto start = std::chrono::high_resolution_clock::now(); */
     BoosterHandle handle = reinterpret_cast<BoosterHandle>(jhandle);
     const bool output_margin = static_cast<const bool>(joutput_margin);
-    const int ntree_limit = static_cast<const int>(jntree_limit);
+    const unsigned ntree_limit = static_cast<const unsigned>(jntree_limit);
 
     const int len = static_cast<const int>(jenv->GetArrayLength(jindices));
-    if(len < 1) return -1;
+    if(len <= 0) return 1;
 
-    int* indices = jenv->GetIntArrayElements(jindices, 0);
-    float* data = jenv->GetFloatArrayElements(jdata, 0);
-    /* const int* indices = static_cast<const int*>(jenv->GetPrimitiveArrayCritical(jindices, 0)); */
-    /* const float* data = static_cast<const float*>(jenv->GetPrimitiveArrayCritical(jdata, 0)); */
-    if (indices == NULL || data == NULL) {
-	    return -1;
-    }
+    /* int* indices = jenv->GetIntArrayElements(jindices, 0); */
+    /* float* data = jenv->GetFloatArrayElements(jdata, 0); */
+    int* indices = static_cast<int*>(jenv->GetPrimitiveArrayCritical(jindices, 0));
+    float* data = static_cast<float*>(jenv->GetPrimitiveArrayCritical(jdata, 0));
+    int out_len;
+    float* result;
+    /* printf("out_len:%d\n", out_len); */
+    /* printf("result:%d\n", result); */
+    int ret = XGBoosterPredictLeafInst(handle, len, indices, data, output_margin, ntree_limit, &out_len, &result);
 
-    bst_ulong out_len;
-    float *result;
-    int ret = XGBoosterPredictLeafInst(handle, len, indices, data, output_margin, static_cast<unsigned>(ntree_limit), &out_len, static_cast<float **>(&result));
+    jenv->ReleasePrimitiveArrayCritical(jdata, data, JNI_ABORT);
+    jenv->ReleasePrimitiveArrayCritical(jindices, indices, JNI_ABORT);
+    /* jenv->ReleaseFloatArrayElements(jdata, data, 0); */
+    /* jenv->ReleaseIntArrayElements(jindices, indices, 0); */
 
-    jenv->ReleaseFloatArrayElements(jdata, static_cast<float *>(data), JNI_ABORT);
-    jenv->ReleaseIntArrayElements(jindices, indices, JNI_ABORT);
-
+    /* printf("out_len:%d\n", out_len); */
+    /* printf("result:%d\n", result); */
     jsize jlen = static_cast<jsize>(out_len);
     jfloatArray jarray = jenv->NewFloatArray(jlen);
-    if(jarray == NULL) return -1;
-    jenv->SetFloatArrayRegion(jarray, 0, jlen, static_cast<jfloat *>(result));
-    if(jenv->ExceptionOccurred()) {
-	    return -1;
-    }
+    jenv->SetFloatArrayRegion(jarray, 0, jlen, result);
     jenv->SetObjectArrayElement(jout, 0, jarray);
-    if(jenv->ExceptionOccurred()) {
-	    return -1;
-    }
+
+// Portion of code to be timed
+
+// Record end time
+/* auto finish = std::chrono::high_resolution_clock::now(); */
+
+/* std::chrono::duration<double> elapsed = finish - start; */
+/* printf("JNI Elapsed time: %f s\n", elapsed.count()); */
+/* fflush(stdout); */
     return static_cast<jint>(ret);
   }
 /*

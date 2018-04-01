@@ -31,7 +31,8 @@ class XGBoostJNI {
 
   static {
     try {
-      NativeLibLoader.initXGBoost();
+	    System.load("/home/developer/lib/libxgboost4j.so");
+	    // NativeLibLoader.initXGBoost();
     } catch (Exception ex) {
       logger.error("Failed to load native library", ex);
       throw new RuntimeException(ex);

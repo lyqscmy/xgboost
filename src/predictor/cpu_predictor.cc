@@ -4,8 +4,10 @@
 #include <xgboost/predictor.h>
 #include <xgboost/tree_model.h>
 #include <xgboost/tree_updater.h>
+#include <vector>
 #include "dmlc/logging.h"
 #include "../common/host_device_vector.h"
+    using std::vector;
 
 namespace xgboost {
 namespace predictor {
@@ -13,12 +15,11 @@ namespace predictor {
 DMLC_REGISTRY_FILE_TAG(cpu_predictor);
 
 class CPUPredictor : public Predictor {
- protected:
-
-  void PredictLeafInstance(const SparseBatch::Inst& inst,
-                       std::vector<bst_float>* out_preds,
-                       const gbm::GBTreeModel& model, unsigned ntree_limit,
-                       unsigned root_index) override {
+protected:
+  void PredictLeafInstance(const SparseBatch::Inst &inst,
+                           std::vector<bst_float> *out_preds,
+                           const gbm::GBTreeModel &model, unsigned ntree_limit,
+                           unsigned root_index) override {
     /* for(bst_uint i = 0;i < inst.length;i++){ */
     /*     printf("%d:%f,",inst[i].index,inst[i].fvalue); */
     /* } */
@@ -28,33 +29,34 @@ class CPUPredictor : public Predictor {
     if (ntree_limit == 0 || ntree_limit > model.trees.size()) {
       ntree_limit = static_cast<unsigned>(model.trees.size());
     }
-    std::vector<bst_float>& preds = *out_preds;
+    std::vector<bst_float> &preds = *out_preds;
     preds.resize(ntree_limit);
     /* printf("size:%d",preds.size()); */
     /* printf("capacity:%d\n",preds.capacity()); */
-    RegTree::FVec& feats = thread_temp[0];
+    RegTree::FVec &feats = thread_temp[0];
     feats.Fill(inst);
-  for (unsigned j = 0; j < ntree_limit; ++j) {
-	  int tid = model.trees[j]->GetLeafIndex(feats, root_index);
-	  /* printf("%d,",tid); */
-	  preds[j] = (static_cast<bst_float>(tid));
-  }
-  /* printf("\n"); */
-  /* printf("\n"); */
+    for (unsigned j = 0; j < ntree_limit; ++j) {
+      int tid = model.trees[j]->GetLeafIndex(feats, root_index);
+      /* printf("%d,",tid); */
+      preds[j] = (static_cast<bst_float>(tid));
+    }
+    /* printf("\n"); */
+    /* printf("\n"); */
     /* printf("size:%d",preds.size()); */
     /* printf("capacity:%d\n",preds.capacity()); */
-    
+
     /* for(bst_uint i = 0;i < ntree_limit;i++){ */
     /*     printf("%f,",preds[i]); */
     /* } */
     feats.Drop(inst);
   }
 
-  static bst_float PredValue(const RowBatch::Inst& inst,
-                             const std::vector<std::unique_ptr<RegTree>>& trees,
-                             const std::vector<int>& tree_info, int bst_group,
-                             unsigned root_index, RegTree::FVec* p_feats,
-                             unsigned tree_begin, unsigned tree_end) {
+  static bst_float
+  PredValue(const RowBatch::Inst &inst,
+            const std::vector<std::unique_ptr<RegTree> > &trees,
+            const std::vector<int> &tree_info, int bst_group,
+            unsigned root_index, RegTree::FVec *p_feats, unsigned tree_begin,
+            unsigned tree_end) {
     bst_float psum = 0.0f;
     p_feats->Fill(inst);
     for (size_t i = tree_begin; i < tree_end; ++i) {
@@ -77,22 +79,22 @@ class CPUPredictor : public Predictor {
       }
     }
   }
-  inline void PredLoopSpecalize(DMatrix* p_fmat,
-                                std::vector<bst_float>* out_preds,
-                                const gbm::GBTreeModel& model, int num_group,
+  inline void PredLoopSpecalize(DMatrix *p_fmat,
+                                std::vector<bst_float> *out_preds,
+                                const gbm::GBTreeModel &model, int num_group,
                                 unsigned tree_begin, unsigned tree_end) {
-    const MetaInfo& info = p_fmat->info();
+    const MetaInfo &info = p_fmat->info();
     const int nthread = omp_get_max_threads();
     InitThreadTemp(nthread, model.param.num_feature);
-    std::vector<bst_float>& preds = *out_preds;
+    std::vector<bst_float> &preds = *out_preds;
     CHECK_EQ(model.param.size_leaf_vector, 0)
         << "size_leaf_vector is enforced to 0 so far";
     CHECK_EQ(preds.size(), p_fmat->info().num_row * num_group);
     // start collecting the prediction
-    dmlc::DataIter<RowBatch>* iter = p_fmat->RowIterator();
+    dmlc::DataIter<RowBatch> *iter = p_fmat->RowIterator();
     iter->BeforeFirst();
     while (iter->Next()) {
-      const RowBatch& batch = iter->Value();
+      const RowBatch &batch = iter->Value();
       // parallel over local batch
       const int K = 8;
       const bst_omp_uint nsize = static_cast<bst_omp_uint>(batch.size);
@@ -100,7 +102,7 @@ class CPUPredictor : public Predictor {
 #pragma omp parallel for schedule(static)
       for (bst_omp_uint i = 0; i < nsize - rest; i += K) {
         const int tid = omp_get_thread_num();
-        RegTree::FVec& feats = thread_temp[tid];
+        RegTree::FVec &feats = thread_temp[tid];
         int64_t ridx[K];
         RowBatch::Inst inst[K];
         for (int k = 0; k < K; ++k) {
@@ -119,7 +121,7 @@ class CPUPredictor : public Predictor {
         }
       }
       for (bst_omp_uint i = nsize - rest; i < nsize; ++i) {
-        RegTree::FVec& feats = thread_temp[0];
+        RegTree::FVec &feats = thread_temp[0];
         const int64_t ridx = static_cast<int64_t>(batch.base_rowid + i);
         const RowBatch::Inst inst = batch[i];
         for (int gid = 0; gid < num_group; ++gid) {
@@ -132,23 +134,21 @@ class CPUPredictor : public Predictor {
     }
   }
 
-  void PredLoopInternal(DMatrix* dmat, std::vector<bst_float>* out_preds,
-                        const gbm::GBTreeModel& model, int tree_begin,
+  void PredLoopInternal(DMatrix *dmat, std::vector<bst_float> *out_preds,
+                        const gbm::GBTreeModel &model, int tree_begin,
                         unsigned ntree_limit) {
     // TODO(Rory): Check if this specialisation actually improves performance
     PredLoopSpecalize(dmat, out_preds, model, model.param.num_output_group,
                       tree_begin, ntree_limit);
   }
 
-  bool PredictFromCache(DMatrix* dmat,
-                        HostDeviceVector<bst_float>* out_preds,
-                        const gbm::GBTreeModel& model,
-                        unsigned ntree_limit) {
+  bool PredictFromCache(DMatrix *dmat, HostDeviceVector<bst_float> *out_preds,
+                        const gbm::GBTreeModel &model, unsigned ntree_limit) {
     if (ntree_limit == 0 ||
         ntree_limit * model.param.num_output_group >= model.trees.size()) {
       auto it = cache_.find(dmat);
       if (it != cache_.end()) {
-        HostDeviceVector<bst_float>& y = it->second.predictions;
+        HostDeviceVector<bst_float> &y = it->second.predictions;
         if (y.size() != 0) {
           out_preds->resize(y.size());
           std::copy(y.data_h().begin(), y.data_h().end(),
@@ -160,13 +160,13 @@ class CPUPredictor : public Predictor {
     return false;
   }
 
-  void InitOutPredictions(const MetaInfo& info,
-                          HostDeviceVector<bst_float>* out_preds,
-                          const gbm::GBTreeModel& model) const {
+  void InitOutPredictions(const MetaInfo &info,
+                          HostDeviceVector<bst_float> *out_preds,
+                          const gbm::GBTreeModel &model) const {
     size_t n = model.param.num_output_group * info.num_row;
-    const std::vector<bst_float>& base_margin = info.base_margin;
+    const std::vector<bst_float> &base_margin = info.base_margin;
     out_preds->resize(n);
-    std::vector<bst_float>& out_preds_h = out_preds->data_h();
+    std::vector<bst_float> &out_preds_h = out_preds->data_h();
     if (base_margin.size() != 0) {
       CHECK_EQ(out_preds->size(), n);
       std::copy(base_margin.begin(), base_margin.end(), out_preds_h.begin());
@@ -175,9 +175,9 @@ class CPUPredictor : public Predictor {
     }
   }
 
- public:
-  void PredictBatch(DMatrix* dmat, HostDeviceVector<bst_float>* out_preds,
-                    const gbm::GBTreeModel& model, int tree_begin,
+public:
+  void PredictBatch(DMatrix *dmat, HostDeviceVector<bst_float> *out_preds,
+                    const gbm::GBTreeModel &model, int tree_begin,
                     unsigned ntree_limit = 0) override {
     if (this->PredictFromCache(dmat, out_preds, model, ntree_limit)) {
       return;
@@ -190,38 +190,37 @@ class CPUPredictor : public Predictor {
       ntree_limit = static_cast<unsigned>(model.trees.size());
     }
 
-    this->PredLoopInternal(dmat, &out_preds->data_h(), model,
-                           tree_begin, ntree_limit);
+    this->PredLoopInternal(dmat, &out_preds->data_h(), model, tree_begin,
+                           ntree_limit);
   }
 
-  void UpdatePredictionCache(
-      const gbm::GBTreeModel& model,
-      std::vector<std::unique_ptr<TreeUpdater>>* updaters,
-      int num_new_trees) override {
+  void
+  UpdatePredictionCache(const gbm::GBTreeModel &model,
+                        std::vector<std::unique_ptr<TreeUpdater> > *updaters,
+                        int num_new_trees) override {
     int old_ntree = model.trees.size() - num_new_trees;
     // update cache entry
-    for (auto& kv : cache_) {
-      PredictionCacheEntry& e = kv.second;
+    for (auto &kv : cache_) {
+      PredictionCacheEntry &e = kv.second;
 
       if (e.predictions.size() == 0) {
         InitOutPredictions(e.data->info(), &(e.predictions), model);
         PredLoopInternal(e.data.get(), &(e.predictions.data_h()), model, 0,
                          model.trees.size());
       } else if (model.param.num_output_group == 1 && updaters->size() > 0 &&
-                 num_new_trees == 1 &&
-                 updaters->back()->UpdatePredictionCache(e.data.get(),
-                                                         &(e.predictions))) {
-        {}  // do nothing
+                 num_new_trees == 1 && updaters->back()->UpdatePredictionCache(
+                                           e.data.get(), &(e.predictions))) {
+        {} // do nothing
       } else {
-        PredLoopInternal(e.data.get(), &(e.predictions.data_h()), model, old_ntree,
-                         model.trees.size());
+        PredLoopInternal(e.data.get(), &(e.predictions.data_h()), model,
+                         old_ntree, model.trees.size());
       }
     }
   }
 
-  void PredictInstance(const SparseBatch::Inst& inst,
-                       std::vector<bst_float>* out_preds,
-                       const gbm::GBTreeModel& model, unsigned ntree_limit,
+  void PredictInstance(const SparseBatch::Inst &inst,
+                       std::vector<bst_float> *out_preds,
+                       const gbm::GBTreeModel &model, unsigned ntree_limit,
                        unsigned root_index) override {
     if (thread_temp.size() == 0) {
       thread_temp.resize(1, RegTree::FVec());
@@ -241,30 +240,31 @@ class CPUPredictor : public Predictor {
           model.base_margin;
     }
   }
-  void PredictLeaf(DMatrix* p_fmat, std::vector<bst_float>* out_preds,
-                   const gbm::GBTreeModel& model, unsigned ntree_limit) override {
+  void PredictLeaf(DMatrix *p_fmat, std::vector<bst_float> *out_preds,
+                   const gbm::GBTreeModel &model,
+                   unsigned ntree_limit) override {
     const int nthread = omp_get_max_threads();
     InitThreadTemp(nthread, model.param.num_feature);
-    const MetaInfo& info = p_fmat->info();
+    const MetaInfo &info = p_fmat->info();
     // number of valid trees
     ntree_limit *= model.param.num_output_group;
     if (ntree_limit == 0 || ntree_limit > model.trees.size()) {
       ntree_limit = static_cast<unsigned>(model.trees.size());
     }
-    std::vector<bst_float>& preds = *out_preds;
+    std::vector<bst_float> &preds = *out_preds;
     preds.resize(info.num_row * ntree_limit);
     // start collecting the prediction
-    dmlc::DataIter<RowBatch>* iter = p_fmat->RowIterator();
+    dmlc::DataIter<RowBatch> *iter = p_fmat->RowIterator();
     iter->BeforeFirst();
     while (iter->Next()) {
-      const RowBatch& batch = iter->Value();
+      const RowBatch &batch = iter->Value();
       // parallel over local batch
       const bst_omp_uint nsize = static_cast<bst_omp_uint>(batch.size);
 #pragma omp parallel for schedule(static)
       for (bst_omp_uint i = 0; i < nsize; ++i) {
         const int tid = omp_get_thread_num();
         size_t ridx = static_cast<size_t>(batch.base_rowid + i);
-        RegTree::FVec& feats = thread_temp[tid];
+        RegTree::FVec &feats = thread_temp[tid];
         feats.Fill(batch[i]);
         for (unsigned j = 0; j < ntree_limit; ++j) {
           int tid = model.trees[j]->GetLeafIndex(feats, info.GetRoot(ridx));
@@ -275,14 +275,14 @@ class CPUPredictor : public Predictor {
     }
   }
 
-  void PredictContribution(DMatrix* p_fmat, std::vector<bst_float>* out_contribs,
-                           const gbm::GBTreeModel& model, unsigned ntree_limit,
-                           bool approximate,
-                           int condition,
+  void PredictContribution(DMatrix *p_fmat,
+                           std::vector<bst_float> *out_contribs,
+                           const gbm::GBTreeModel &model, unsigned ntree_limit,
+                           bool approximate, int condition,
                            unsigned condition_feature) override {
     const int nthread = omp_get_max_threads();
-    InitThreadTemp(nthread,  model.param.num_feature);
-    const MetaInfo& info = p_fmat->info();
+    InitThreadTemp(nthread, model.param.num_feature);
+    const MetaInfo &info = p_fmat->info();
     // number of valid trees
     ntree_limit *= model.param.num_output_group;
     if (ntree_limit == 0 || ntree_limit > model.trees.size()) {
@@ -291,32 +291,32 @@ class CPUPredictor : public Predictor {
     const int ngroup = model.param.num_output_group;
     size_t ncolumns = model.param.num_feature + 1;
     // allocate space for (number of features + bias) times the number of rows
-    std::vector<bst_float>& contribs = *out_contribs;
+    std::vector<bst_float> &contribs = *out_contribs;
     contribs.resize(info.num_row * ncolumns * model.param.num_output_group);
     // make sure contributions is zeroed, we could be reusing a previously
     // allocated one
     std::fill(contribs.begin(), contribs.end(), 0);
-    // initialize tree node mean values
-    #pragma omp parallel for schedule(static)
+// initialize tree node mean values
+#pragma omp parallel for schedule(static)
     for (bst_omp_uint i = 0; i < ntree_limit; ++i) {
       model.trees[i]->FillNodeMeanValues();
     }
     // start collecting the contributions
-    dmlc::DataIter<RowBatch>* iter = p_fmat->RowIterator();
-    const std::vector<bst_float>& base_margin = info.base_margin;
+    dmlc::DataIter<RowBatch> *iter = p_fmat->RowIterator();
+    const std::vector<bst_float> &base_margin = info.base_margin;
     iter->BeforeFirst();
     while (iter->Next()) {
-      const RowBatch& batch = iter->Value();
+      const RowBatch &batch = iter->Value();
       // parallel over local batch
       const bst_omp_uint nsize = static_cast<bst_omp_uint>(batch.size);
 #pragma omp parallel for schedule(static)
       for (bst_omp_uint i = 0; i < nsize; ++i) {
         size_t row_idx = static_cast<size_t>(batch.base_rowid + i);
         unsigned root_id = info.GetRoot(row_idx);
-        RegTree::FVec& feats = thread_temp[omp_get_thread_num()];
+        RegTree::FVec &feats = thread_temp[omp_get_thread_num()];
         // loop over all classes
         for (int gid = 0; gid < ngroup; ++gid) {
-          bst_float* p_contribs =
+          bst_float *p_contribs =
               &contribs[(row_idx * ngroup + gid) * ncolumns];
           feats.Fill(batch[i]);
           // calculate contributions
@@ -325,10 +325,11 @@ class CPUPredictor : public Predictor {
               continue;
             }
             if (!approximate) {
-              model.trees[j]->CalculateContributions(feats, root_id, p_contribs,
-                                                     condition, condition_feature);
+              model.trees[j]->CalculateContributions(
+                  feats, root_id, p_contribs, condition, condition_feature);
             } else {
-              model.trees[j]->CalculateContributionsApprox(feats, root_id, p_contribs);
+              model.trees[j]
+                  ->CalculateContributionsApprox(feats, root_id, p_contribs);
             }
           }
           feats.Drop(batch[i]);
@@ -343,42 +344,54 @@ class CPUPredictor : public Predictor {
     }
   }
 
-  void PredictInteractionContributions(DMatrix* p_fmat, std::vector<bst_float>* out_contribs,
-                                       const gbm::GBTreeModel& model, unsigned ntree_limit,
+  void PredictInteractionContributions(DMatrix *p_fmat,
+                                       std::vector<bst_float> *out_contribs,
+                                       const gbm::GBTreeModel &model,
+                                       unsigned ntree_limit,
                                        bool approximate) override {
-    const MetaInfo& info = p_fmat->info();
+    const MetaInfo &info = p_fmat->info();
     const int ngroup = model.param.num_output_group;
     size_t ncolumns = model.param.num_feature;
     const unsigned row_chunk = ngroup * (ncolumns + 1) * (ncolumns + 1);
     const unsigned mrow_chunk = (ncolumns + 1) * (ncolumns + 1);
     const unsigned crow_chunk = ngroup * (ncolumns + 1);
 
-    // allocate space for (number of features^2) times the number of rows and tmp off/on contribs
-    std::vector<bst_float>& contribs = *out_contribs;
+    // allocate space for (number of features^2) times the number of rows and
+    // tmp off/on contribs
+    std::vector<bst_float> &contribs = *out_contribs;
     contribs.resize(info.num_row * ngroup * (ncolumns + 1) * (ncolumns + 1));
     std::vector<bst_float> contribs_off(info.num_row * ngroup * (ncolumns + 1));
     std::vector<bst_float> contribs_on(info.num_row * ngroup * (ncolumns + 1));
-    std::vector<bst_float> contribs_diag(info.num_row * ngroup * (ncolumns + 1));
+    std::vector<bst_float> contribs_diag(info.num_row * ngroup *
+                                         (ncolumns + 1));
 
-    // Compute the difference in effects when conditioning on each of the features on and off
+    // Compute the difference in effects when conditioning on each of the
+    // features on and off
     // see: Axiomatic characterizations of probabilistic and
     //      cardinal-probabilistic interaction indices
-    PredictContribution(p_fmat, &contribs_diag, model, ntree_limit, approximate, 0, 0);
+    PredictContribution(p_fmat, &contribs_diag, model, ntree_limit, approximate,
+                        0, 0);
     for (size_t i = 0; i < ncolumns + 1; ++i) {
-      PredictContribution(p_fmat, &contribs_off, model, ntree_limit, approximate, -1, i);
-      PredictContribution(p_fmat, &contribs_on, model, ntree_limit, approximate, 1, i);
+      PredictContribution(p_fmat, &contribs_off, model, ntree_limit,
+                          approximate, -1, i);
+      PredictContribution(p_fmat, &contribs_on, model, ntree_limit, approximate,
+                          1, i);
 
       for (size_t j = 0; j < info.num_row; ++j) {
         for (int l = 0; l < ngroup; ++l) {
-          const unsigned o_offset = j * row_chunk + l * mrow_chunk + i * (ncolumns + 1);
+          const unsigned o_offset =
+              j * row_chunk + l * mrow_chunk + i * (ncolumns + 1);
           const unsigned c_offset = j * crow_chunk + l * (ncolumns + 1);
           contribs[o_offset + i] = 0;
           for (size_t k = 0; k < ncolumns + 1; ++k) {
-            // fill in the diagonal with additive effects, and off-diagonal with the interactions
+            // fill in the diagonal with additive effects, and off-diagonal with
+            // the interactions
             if (k == i) {
               contribs[o_offset + i] += contribs_diag[c_offset + k];
             } else {
-              contribs[o_offset + k] = (contribs_on[c_offset + k] - contribs_off[c_offset + k])/2.0;
+              contribs[o_offset + k] =
+                  (contribs_on[c_offset + k] - contribs_off[c_offset + k]) /
+                  2.0;
               contribs[o_offset + i] -= contribs[o_offset + k];
             }
           }
@@ -392,5 +405,5 @@ class CPUPredictor : public Predictor {
 XGBOOST_REGISTER_PREDICTOR(CPUPredictor, "cpu_predictor")
     .describe("Make predictions using CPU.")
     .set_body([]() { return new CPUPredictor(); });
-}  // namespace predictor
-}  // namespace xgboost
+} // namespace predictor
+} // namespace xgboost

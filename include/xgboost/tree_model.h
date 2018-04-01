@@ -447,11 +447,13 @@ class RegTree: public TreeModel<bst_float, RTreeNodeStat> {
      * \brief fill the vector with sparse vector
      * \param inst The sparse instance to fill.
      */
+    inline void lyq_Fill(const int size, const int *indices, const float *values);
     inline void Fill(const RowBatch::Inst& inst);
     /*!
      * \brief drop the trace after fill, must be called after fill.
      * \param inst The sparse instance to drop.
      */
+    inline void lyq_Drop(const int size, const int *indices);
     inline void Drop(const RowBatch::Inst& inst);
     /*!
      * \brief returns the size of the feature vector
@@ -471,7 +473,7 @@ class RegTree: public TreeModel<bst_float, RTreeNodeStat> {
      */
     inline bool is_missing(size_t i) const;
 
-   private:
+   public:
     /*!
      * \brief a union value of value and flag
      *  when flag == -1, this indicate the value is missing
@@ -573,6 +575,12 @@ inline void RegTree::FVec::Init(size_t size) {
   std::fill(data.begin(), data.end(), e);
 }
 
+//lyq
+inline void RegTree::FVec::lyq_Fill(const int size, const int *indices, const float *values) {
+  for (int i = 0; i < size; ++i) {
+    data[indices[i]].fvalue = values[i];
+  }
+}
 inline void RegTree::FVec::Fill(const RowBatch::Inst& inst) {
   for (bst_uint i = 0; i < inst.length; ++i) {
     if (inst[i].index >= data.size()) continue;
@@ -580,6 +588,12 @@ inline void RegTree::FVec::Fill(const RowBatch::Inst& inst) {
   }
 }
 
+//lyq
+inline void RegTree::FVec::lyq_Drop(const int size, const int *indices) {
+  for (int i = 0; i < size; ++i) {
+    data[indices[i]].flag = -1;
+  }
+}
 inline void RegTree::FVec::Drop(const RowBatch::Inst& inst) {
   for (bst_uint i = 0; i < inst.length; ++i) {
     if (inst[i].index >= data.size()) continue;

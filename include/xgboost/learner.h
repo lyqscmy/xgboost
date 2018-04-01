@@ -1,7 +1,8 @@
 /*!
  * Copyright 2015 by Contributors
  * \file learner.h
- * \brief Learner interface that integrates objective, gbm and evaluation together.
+ * \brief Learner interface that integrates objective, gbm and evaluation
+ * together.
  *  This is the user facing XGBoost training module.
  * \author Tianqi Chen
  */
@@ -9,6 +10,7 @@
 #define XGBOOST_LEARNER_H_
 
 #include <rabit/rabit.h>
+#include <xgboost/tree_model.h>
 #include <utility>
 #include <string>
 #include <vector>
@@ -35,7 +37,7 @@ namespace xgboost {
  *  \endcode
  */
 class Learner : public rabit::Serializable {
- public:
+public:
   /*! \brief virtual destructor */
   virtual ~Learner() {}
   /*!
@@ -44,7 +46,7 @@ class Learner : public rabit::Serializable {
    * \param end The end iterator.
    * \tparam PairIter iterator<std::pair<std::string, std::string> >
    */
-  template<typename PairIter>
+  template <typename PairIter>
   inline void Configure(PairIter begin, PairIter end);
   /*!
    * \brief Set the configuration of gradient boosting.
@@ -52,29 +54,32 @@ class Learner : public rabit::Serializable {
    *
    * \param cfg configurations on both training and model parameters.
    */
-  virtual void Configure(const std::vector<std::pair<std::string, std::string> >& cfg) = 0;
+  virtual void
+  Configure(const std::vector<std::pair<std::string, std::string> > &cfg) = 0;
   /*!
-   * \brief Initialize the model using the specified configurations via Configure.
-   *  An model have to be either Loaded or initialized before Update/Predict/Save can be called.
+   * \brief Initialize the model using the specified configurations via
+   * Configure.
+   *  An model have to be either Loaded or initialized before
+   * Update/Predict/Save can be called.
    */
   virtual void InitModel() = 0;
   /*!
    * \brief load model from stream
    * \param fi input stream.
    */
-  virtual void Load(dmlc::Stream* fi) = 0;
+  virtual void Load(dmlc::Stream *fi) = 0;
   /*!
    * \brief save model to stream.
    * \param fo output stream
    */
-  virtual void Save(dmlc::Stream* fo) const = 0;
+  virtual void Save(dmlc::Stream *fo) const = 0;
   /*!
    * \brief update the model for one iteration
    *  With the specified objective function.
    * \param iter current iteration number
    * \param train reference to the data matrix.
    */
-  virtual void UpdateOneIter(int iter, DMatrix* train) = 0;
+  virtual void UpdateOneIter(int iter, DMatrix *train) = 0;
   /*!
    * \brief Do customized gradient boosting with in_gpair.
    *  in_gair can be mutated after this call.
@@ -82,39 +87,39 @@ class Learner : public rabit::Serializable {
    * \param train reference to the data matrix.
    * \param in_gpair The input gradient statistics.
    */
-  virtual void BoostOneIter(int iter,
-                            DMatrix* train,
-                            HostDeviceVector<bst_gpair>* in_gpair) = 0;
+  virtual void BoostOneIter(int iter, DMatrix *train,
+                            HostDeviceVector<bst_gpair> *in_gpair) = 0;
   /*!
-   * \brief evaluate the model for specific iteration using the configured metrics.
+   * \brief evaluate the model for specific iteration using the configured
+   * metrics.
    * \param iter iteration number
    * \param data_sets datasets to be evaluated.
    * \param data_names name of each dataset
    * \return a string corresponding to the evaluation result
    */
-  virtual std::string EvalOneIter(int iter,
-                                  const std::vector<DMatrix*>& data_sets,
-                                  const std::vector<std::string>& data_names) = 0;
+  virtual std::string
+  EvalOneIter(int iter, const std::vector<DMatrix *> &data_sets,
+              const std::vector<std::string> &data_names) = 0;
 
   /*!
    * \brief get prediction given the model.
    * \param data input data
-   * \param output_margin whether to only predict margin value instead of transformed prediction
+   * \param output_margin whether to only predict margin value instead of
+   * transformed prediction
    * \param out_preds output vector that stores the prediction
    * \param ntree_limit limit number of trees used for boosted tree
    *   predictor, when it equals 0, this means we are using all the trees
-   * \param pred_leaf whether to only predict the leaf index of each tree in a boosted tree predictor
+   * \param pred_leaf whether to only predict the leaf index of each tree in a
+   * boosted tree predictor
    * \param pred_contribs whether to only predict the feature contributions
-   * \param approx_contribs whether to approximate the feature contributions for speed
+   * \param approx_contribs whether to approximate the feature contributions for
+   * speed
    * \param pred_interactions whether to compute the feature pair contributions
    */
-  virtual void Predict(DMatrix* data,
-                       bool output_margin,
+  virtual void Predict(DMatrix *data, bool output_margin,
                        HostDeviceVector<bst_float> *out_preds,
-                       unsigned ntree_limit = 0,
-                       bool pred_leaf = false,
-                       bool pred_contribs = false,
-                       bool approx_contribs = false,
+                       unsigned ntree_limit = 0, bool pred_leaf = false,
+                       bool pred_contribs = false, bool approx_contribs = false,
                        bool pred_interactions = false) const = 0;
 
   /*!
@@ -123,7 +128,7 @@ class Learner : public rabit::Serializable {
    * \param key The key of the property.
    * \param value The value of the property.
    */
-  virtual void SetAttr(const std::string& key, const std::string& value) = 0;
+  virtual void SetAttr(const std::string &key, const std::string &value) = 0;
   /*!
    * \brief Get attribute from the booster.
    *  The property will be saved along the booster.
@@ -131,13 +136,13 @@ class Learner : public rabit::Serializable {
    * \param out The output value.
    * \return Whether the key exists among booster's attributes.
    */
-  virtual bool GetAttr(const std::string& key, std::string* out) const = 0;
+  virtual bool GetAttr(const std::string &key, std::string *out) const = 0;
   /*!
    * \brief Delete an attribute from the booster.
    * \param key The key of the attribute.
    * \return Whether the key was found among booster's attributes.
    */
-  virtual bool DelAttr(const std::string& key) = 0;
+  virtual bool DelAttr(const std::string &key) = 0;
   /*!
    * \brief Get a vector of attribute names from the booster.
    * \return vector of attribute name strings.
@@ -154,27 +159,25 @@ class Learner : public rabit::Serializable {
    * \param format the format to dump the model in
    * \return a vector of dump for boosters.
    */
-  std::vector<std::string> DumpModel(const FeatureMap& fmap,
-                                     bool with_stats,
+  std::vector<std::string> DumpModel(const FeatureMap &fmap, bool with_stats,
                                      std::string format) const;
- inline void PredictLeafInstance(const SparseBatch::Inst &inst,
-		      bool output_margin,
-		      HostDeviceVector<bst_float> *out_preds,
-		      unsigned ntree_limit = 0,
-		      unsigned root_index = 0) const;
+
+  inline std::vector<int> PredictLeafInstance(const RegTree::FVec& feat) const;
   /*!
    * \brief online prediction function, predict score for one instance at a time
-   *  NOTE: use the batch prediction interface if possible, batch prediction is usually
+   *  NOTE: use the batch prediction interface if possible, batch prediction is
+   *usually
    *        more efficient than online prediction
-   *        This function is NOT threadsafe, make sure you only call from one thread.
+   *        This function is NOT threadsafe, make sure you only call from one
+   *thread.
    *
    * \param inst the instance you want to predict
-   * \param output_margin whether to only predict margin value instead of transformed prediction
+   * \param output_margin whether to only predict margin value instead of
+   *transformed prediction
    * \param out_preds output vector to hold the predictions
    * \param ntree_limit limit the number of trees used in prediction
    */
-  inline void Predict(const SparseBatch::Inst &inst,
-                      bool output_margin,
+  inline void Predict(const SparseBatch::Inst &inst, bool output_margin,
                       HostDeviceVector<bst_float> *out_preds,
                       unsigned ntree_limit = 0) const;
 
@@ -183,9 +186,10 @@ class Learner : public rabit::Serializable {
    * \param cache_data The matrix to cache the prediction.
    * \return Created learner.
    */
-  static Learner* Create(const std::vector<std::shared_ptr<DMatrix> >& cache_data);
+  static Learner *
+  Create(const std::vector<std::shared_ptr<DMatrix> > &cache_data);
 
- protected:
+protected:
   /*! \brief internal base score of the model */
   bst_float base_score_;
   /*! \brief objective function */
@@ -196,29 +200,18 @@ class Learner : public rabit::Serializable {
   std::vector<std::unique_ptr<Metric> > metrics_;
 };
 
-inline void Learner::PredictLeafInstance(const SparseBatch::Inst &inst,
-		      bool output_margin,
-		      HostDeviceVector<bst_float> *out_preds,
-		      unsigned ntree_limit,
-		      unsigned root_index) const {
-  gbm_->PredictLeafInstance(inst, &out_preds->data_h(), ntree_limit, root_index);
-  //TODO how to do output_margin?
-  /* if (!output_margin) { */
-  /*   obj_->PredTransform(out_preds); */
+inline std::vector<int> Learner::PredictLeafInstance(const RegTree::FVec& feat) const {
+  auto preds =  gbm_->PredictLeafInstance(feat);
+  /* for(const auto& x:preds){ */
+  /* printf("%d\t", x); */
   /* } */
-    /* std::vector<bst_float>& preds = out_preds->data_h(); */
-    /* printf("size:%d",preds.size()); */
-    /* printf("capacity:%d\n",preds.capacity()); */
-    
-    /* for(bst_uint i = 0;i < 150;i++){ */
-    /*     printf("%f,",preds[i]); */
-    /* } */
+  /* printf("learner:%d\n", preds.data()); */
+  return preds;
 }
 
 // implementation of inline functions.
-inline void Learner::Predict(const SparseBatch::Inst& inst,
-                             bool output_margin,
-                             HostDeviceVector<bst_float>* out_preds,
+inline void Learner::Predict(const SparseBatch::Inst &inst, bool output_margin,
+                             HostDeviceVector<bst_float> *out_preds,
                              unsigned ntree_limit) const {
   gbm_->PredictInstance(inst, &out_preds->data_h(), ntree_limit);
   if (!output_margin) {
@@ -227,11 +220,11 @@ inline void Learner::Predict(const SparseBatch::Inst& inst,
 }
 
 // implementing configure.
-template<typename PairIter>
+template <typename PairIter>
 inline void Learner::Configure(PairIter begin, PairIter end) {
   std::vector<std::pair<std::string, std::string> > vec(begin, end);
   this->Configure(vec);
 }
 
-}  // namespace xgboost
-#endif  // XGBOOST_LEARNER_H_
+} // namespace xgboost
+#endif // XGBOOST_LEARNER_H_

@@ -8,6 +8,7 @@
 #include <dmlc/omp.h>
 #include <dmlc/parameter.h>
 #include <xgboost/gbm.h>
+#include <xgboost/tree_model.h>
 #include <xgboost/logging.h>
 #include <xgboost/linear_updater.h>
 #include <vector>
@@ -129,11 +130,8 @@ class GBLinear : public GradientBooster {
     }
   }
 
-  void PredictLeafInstance(const SparseBatch::Inst& inst,
-               std::vector<bst_float>* out_preds,
-               unsigned ntree_limit,
-               unsigned root_index) override {
-  }
+  std::vector<int> PredictLeafInstance(const RegTree::FVec& feat) override {}
+
 
   void PredictLeaf(DMatrix *p_fmat,
                    std::vector<bst_float> *out_preds,
