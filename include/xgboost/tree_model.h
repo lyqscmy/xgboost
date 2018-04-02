@@ -92,6 +92,8 @@ class TreeModel {
     }
     /*! \brief index of default child when feature is missing */
     inline int cdefault() const {
+      /* printf("sindex_:%u\n", sindex_); */
+      printf("default_left:%s\n", this->default_left()? "True" : "False");
       return this->default_left() ? this->cleft() : this->cright();
     }
     /*! \brief feature index of split condition */
@@ -601,8 +603,10 @@ inline bool RegTree::FVec::is_missing(size_t i) const {
 
 inline int RegTree::GetLeafIndex(const RegTree::FVec& feat, unsigned root_id) const {
   int pid = static_cast<int>(root_id);
+  printf("root_id:%d\n", pid);
   while (!(*this)[pid].is_leaf()) {
     unsigned split_index = (*this)[pid].split_index();
+    printf("split_index:%u\n", split_index);
     pid = this->GetNext(pid, feat.fvalue(split_index), feat.is_missing(split_index));
   }
   return pid;
@@ -837,11 +841,17 @@ inline void RegTree::CalculateContributions(const RegTree::FVec& feat, unsigned 
 inline int RegTree::GetNext(int pid, bst_float fvalue, bool is_unknown) const {
   bst_float split_value = (*this)[pid].split_cond();
   if (is_unknown) {
+    printf("missing\n");
+    /* printf("cdefault:%d\n",(*this)[pid].cdefault()); */
     return (*this)[pid].cdefault();
   } else {
+    printf("fvalue:%f\n", fvalue);
+    printf("split_cond:%f\n", split_value);
     if (fvalue < split_value) {
+      printf("cleft:%d\n",(*this)[pid].cleft());
       return (*this)[pid].cleft();
     } else {
+      printf("cright:%d\n",(*this)[pid].cright());
       return (*this)[pid].cright();
     }
   }
